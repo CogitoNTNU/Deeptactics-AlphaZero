@@ -84,3 +84,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ### Credits
 ------
 Template by [@JonRodtang](https://github.com/Jonrodtang) for  [@CogitoNTNU](https://github.com/CogitoNTNU)  <p align="right">(<a href="#top">back to top</a>)</p>
+
+
+Christian was here!
