@@ -2,9 +2,6 @@ import copy as copy
 import random
 import time
 
-import chess
-import gym
-import gym_chess
 import numpy as np
 import pyspiel
 from open_spiel.python import games
@@ -28,32 +25,6 @@ def spiel_chess(moves, state):
         noob = np.reshape(np.asarray(state.observation_tensor()), [20, 8, 8])
 
 
-def python_chess(moves, env):
-    env.reset()
-    done = False
-    move = 0
-    while move < moves:
-        action = random.sample(env.legal_actions, 1)[0]
-        state_info = env.step(action)
-        done = state_info[2]
-        move +=1
-        if done:
-            break
-
-def python_chess_2(moves, board):
-    board.reset()
-    move = 0
-    while move < moves:
-        legal_moves = list(board.legal_moves)
-        if not legal_moves:
-            break
-        action = random.choice(legal_moves)
-        board.push(action)
-        move += 1
-        if board.is_game_over():
-            break
-
-
 def function_time(func, moves, env):
     start_time = time.perf_counter()
     func(moves, env)
@@ -63,7 +34,7 @@ def function_time(func, moves, env):
 
 if __name__ == "__main__":
     # normal python chess
-    env = gym.make("ChessAlphaZero-v0")
+    env = gym.make("TicTacToe")
     chess_games = 10
     pytime = 0
     moves = 200

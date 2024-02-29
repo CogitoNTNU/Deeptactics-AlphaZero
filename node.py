@@ -18,6 +18,12 @@ class Node:
         The current game state.
         """
 
+        self.action = action
+        """
+        The action which was taken.\n
+        This will be a number between 0 and 8.
+        """
+
         self.visits = 0
         """
         The number of times this node has been visited.
@@ -28,8 +34,11 @@ class Node:
         The cumulative reward gained from this game state.
         """
 
-        self.action = action
+    def has_children(self) -> bool:
         """
-        The action which was taken.\n
-        This will be a number between 1 and 9.
+        Returns True if the state has children.
         """
+        return len(self.children) > 0
+
+    def __repr__(self) -> str:
+        return str(self.state)
