@@ -18,7 +18,6 @@ class Mcts:
 
     def select(self, node: Node) -> Node:
         """
-        Ludvig var her
         Select stage of MCTS.
         Go through the game tree, layer by layer.
         Chooses the node with the highest UCB-score at each layer.
