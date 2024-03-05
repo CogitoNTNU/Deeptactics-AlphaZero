@@ -5,14 +5,13 @@ from node import Node
 
 
 class Mcts:
-
     def __init__(self):
         self.c = 1.41
 
     def ucb(self, node: Node) -> int:
         if node.visits == 0:
             return np.inf
-        return -node.value / node.visits + self.c * np.sqrt(
+        return node.value / node.visits + self.c * np.sqrt(
             np.log(node.parent.visits) / node.visits
         )
 
@@ -60,15 +59,13 @@ class Mcts:
         """
         Simulate random moves until you reach a leaf node (A conclusion of the game)
         """
-        # print("simulate")
         simulation_state = node.state.clone()
         while not (simulation_state.is_terminal()):
             action = np.random.choice(simulation_state.legal_actions())
             simulation_state.apply_action(action)
-        return simulation_state.returns()[node.state.current_player()]
+        return simulation_state.returns()[(node.state.current_player() + 1) & 1]
 
     def backpropagate(self, node: Node, result: int):
-        # print("backpropagate")
         """
         Return the results all the way back up the game tree.
         """
@@ -83,52 +80,41 @@ class Mcts:
         Random moves are selected all the way.
         """
         root_node = Node(None, state, None)
-        # self.expand(root_node)
         for _ in range(num_simulations):
             node = self.select(root_node)  # Get desired childnode
-            # print(node)
-            # print(node.state)
             if not node.state.is_terminal() and not node.has_children():
                 self.expand(node)  # creates all its children
                 winner = self.simulate(node)
             else:
-                player = (node.parent.state.current_player() + 1) % 2
+                player = (
+                    node.parent.state.current_player()
+                )  # Here state is terminal, so we get the winning player
+                if player is None:
+                    print("Player is none!")
                 winner = node.state.returns()[player]
-            # print(winner)
-            # print(root_node.state.current_player())
-            # print(root_node.state)
             self.backpropagate(node, winner)
 
         print("num visits\t", [node.visits for node in root_node.children])
         print("actions\t\t", [node.action for node in root_node.children])
         return max(
             root_node.children, key=lambda node: node.visits
-        ).action  # The best action
+        ).action  # The best action is the one with the most visits
 
 
 if __name__ == "__main__":
     # game = pyspiel.load_game("connect_four")
     game = pyspiel.load_game("tic_tac_toe")
+    # game = pyspiel.load_game("chess")
     state = game.new_initial_state()
     first_state = state.clone()
     mcts = Mcts()
     while not state.is_terminal():
-        action = mcts.run_simulation(state)
+        action = mcts.run_simulation(state, 1_000)
         print("best action\t", action, "\n")
         state.apply_action(action)
         print(state)
         print()
-
-    # state.apply_action(0)
-    # print(state.current_player())
-    # #print(state.legal_actions())
-    # while not state.is_terminal():
-    #     action = np.random.choice(state.legal_actions())
-    #     state.apply_action(action)
-    #     #print(state.current_player(), "\n")
-    # print(first_state)
-    # print(state)
-    # print(state.returns())
+    print(state.returns())
 
 
 """
