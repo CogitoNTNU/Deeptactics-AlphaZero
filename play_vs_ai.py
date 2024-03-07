@@ -37,4 +37,4 @@ if __name__ == "__main__":
     mcts = Mcts()
     game = pyspiel.load_game("tic_tac_toe")
     state = game.new_initial_state()
-    play_game(ai, player, state)
+    play_game(player, ai, state)

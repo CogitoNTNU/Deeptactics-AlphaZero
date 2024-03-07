@@ -74,7 +74,7 @@ class Mcts:
             node.value += result
             self.backpropagate(node.parent, -result)
 
-    def run_simulation(self, state, num_simulations=1000):
+    def run_simulation(self, state, num_simulations=1_000):
         """
         Simulate a game to its conclusion.
         Random moves are selected all the way.
@@ -96,14 +96,15 @@ class Mcts:
 
         print("num visits\t", [node.visits for node in root_node.children])
         print("actions\t\t", [node.action for node in root_node.children])
+            
         return max(
             root_node.children, key=lambda node: node.visits
         ).action  # The best action is the one with the most visits
 
 
 if __name__ == "__main__":
-    # game = pyspiel.load_game("connect_four")
-    game = pyspiel.load_game("tic_tac_toe")
+    game = pyspiel.load_game("connect_four")
+    # game = pyspiel.load_game("tic_tac_toe")
     # game = pyspiel.load_game("chess")
     state = game.new_initial_state()
     first_state = state.clone()
@@ -113,7 +114,9 @@ if __name__ == "__main__":
         print("best action\t", action, "\n")
         state.apply_action(action)
         print(state)
+        print(np.reshape(np.asarray(state.observation_tensor()), game.observation_tensor_shape()))
         print()
+        
     print(state.returns())
 
 
