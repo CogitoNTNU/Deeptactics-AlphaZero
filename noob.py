@@ -31,33 +31,35 @@ argmax(0.3, 0.1, 0.6) = 0.6
 ...
 xoo
 oxx
+
+
 """
 
 # valg 1:
-[
-    [0,  0,  0],
-    [1, -1, -1],
-    [-1, 1,  1]
-]
+# [
+#     [0,  0,  0],
+#     [1, -1, -1],
+#     [-1, 1,  1]
+# ]
 
 # valg 2 (bedre):
-[
-    [
-        [0, 0, 0], # player 1
-        [1, 0, 0],
-        [0, 1, 1]
-    ],
-    [
-        [0, 0, 0], # player 2
-        [0, 1, 1],
-        [1, 0, 0]
-    ],
-    [
-        [1, 1, 1], # empty squares
-        [0, 0, 0],
-        [0, 0, 0]
-    ]
-]
+# [
+#     [
+#         [0, 0, 0], # player 1
+#         [0, 1, 1],
+#         [1, 0, 0]
+#     ],
+#     [
+#         [0, 0, 0], # player 2
+#         [1, 0, 0],
+#         [0, 1, 1]
+#     ],
+#     [
+#         [1, 1, 1], # empty squares
+#         [0, 0, 0],
+#         [0, 0, 0]
+#     ]
+# ]
 
 # Eksempel fra fire på rad:
 """
@@ -82,3 +84,21 @@ oxx
   [1. 0. 1. 1. 1. 1. 1.],
   [1. 1. 1. 1. 1. 1. 1.]]]
 """
+
+if __name__ == "__main__":
+    from NeuralNetwork import NeuralNetwork
+    import torch
+
+    nn = NeuralNetwork()
+    state = torch.tensor(
+        [
+            [[0, 0, 0], [1, 0, 0], [0, 1, 1]],  # player 1
+            [[0, 0, 0], [0, 1, 1], [1, 0, 0]],  # player 2
+            [[1, 1, 1], [0, 0, 0], [0, 0, 0]],  # empty squares
+        ],
+        dtype=torch.float,
+    )
+    state = state.unsqueeze(0)
+    print(state.size())
+    x = nn.initial(state)
+    print(x.size())
