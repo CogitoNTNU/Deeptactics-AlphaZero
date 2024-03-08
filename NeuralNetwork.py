@@ -5,52 +5,52 @@ import torch.nn.functional as F
 class NeuralNetwork(nn.Module):
     def __init__(
         self,
-        hidden_dimention=256,
-        input_dimention=3,
+        hidden_dimension=256,
+        input_dimension=3,
         res_blocks=5,
         game_size=9,
         legal_moves=9,
     ):
         super().__init__()
-        self.hidden_dimention = hidden_dimention
-        self.input_dimention = input_dimention
+        self.hidden_dimension = hidden_dimension
+        self.input_dimension = input_dimension
         self.res_blocks = res_blocks
 
         self.initial = nn.Sequential(
             nn.Conv2d(
-                self.input_dimention,
-                self.hidden_dimention,
+                self.input_dimension,
+                self.hidden_dimension,
                 kernel_size=3,
                 stride=1,
                 padding=1,
             ),  # Convolution matrix
-            nn.BatchNorm2d(self.hidden_dimention),  # Batch normalization
+            nn.BatchNorm2d(self.hidden_dimension),  # Batch normalization
             nn.ReLU(),  # Activation function
         )
 
         # [1, 9, 2, 3..]
         self.block = nn.Sequential(
             nn.Conv2d(
-                self.hidden_dimention,
-                self.hidden_dimention,
+                self.hidden_dimension,
+                self.hidden_dimension,
                 kernel_size=3,
                 stride=1,
                 padding=1,
             ),  # Convolution matrix
-            nn.BatchNorm2d(self.hidden_dimention),  # Batch normalization
+            nn.BatchNorm2d(self.hidden_dimension),  # Batch normalization
             nn.ReLU(),  # Activation function
             nn.Conv2d(
-                self.hidden_dimention,
-                self.hidden_dimention,
+                self.hidden_dimension,
+                self.hidden_dimension,
                 kernel_size=3,
                 stride=1,
                 padding=1,
             ),  # Convolution matrix
-            nn.BatchNorm2d(self.hidden_dimention),  # Batch normalization
+            nn.BatchNorm2d(self.hidden_dimension),  # Batch normalization
         )
 
         self.policy = nn.Sequential(
-            nn.Conv2d(self.hidden_dimention, 2, kernel_size=1, stride=1),
+            nn.Conv2d(self.hidden_dimension, 2, kernel_size=1, stride=1),
             nn.BatchNorm2d(2),
             nn.ReLU(),  # shape (1, 2, 3, 3)
             nn.Flatten(),  # shape (1)
@@ -58,7 +58,7 @@ class NeuralNetwork(nn.Module):
         )
 
         self.value = nn.Sequential(
-            nn.Conv2d(self.hidden_dimention, 1, kernel_size=1, stride=1),
+            nn.Conv2d(self.hidden_dimension, 1, kernel_size=1, stride=1),
             nn.BatchNorm2d(1),
             nn.ReLU(),
             nn.Flatten(),
