@@ -1,0 +1,5 @@
+icecream
+numpy
+torch
+open-spiel
+wandb
