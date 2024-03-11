@@ -1,21 +1,19 @@
 <div id="top"></div>
 
 
-<!--INSERT PICTURE REPRESENTATIVE OF PROJECT-->
 <div align="center">
-<img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.Khns8mi5ov-qN64yFABHmAHaE7%26pid%3DApi&f=1"></img>
+<img src="./pictures/muzero-image.png" style="width: 50vw;"></img>
 </div>
+
 <p align="center">
 <a href="https://github.com/CogitoNTNU/README-template/blob/main/LICENSE" alt="LICENSE">
         <img src="https://img.shields.io/badge/license-MIT-green"></img></a>
-
 <a href="" alt="platform">
         <img src="https://img.shields.io/badge/platform-linux%7Cwindows%7CmacOS-lightgrey"></img></a>
 <a href="" alt="version">
         <img src="https://img.shields.io/badge/version-0.0.1-blue"></img></a>
 </p>
-<h3 align="center">README-template</h3>
-<!-- TABLE OF CONTENTS -->
+
 <details>
   <summary>Table of Contents</summary>
   <ol>
@@ -35,55 +33,87 @@
   </ol>
 </details>
 
-### About 
------
-This is a template README for projects by Cogito NTNU.   
+### About
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-### Getting started
-------
+-----
+
+This project, initiated by Cogito NTNU, embarks on the ambitious journey of exploring deep reinforcement learning within the realm of board games. At its core, the project aims to harness the power of advanced AI algorithms, starting with an implementation of AlphaZero, before advancing to the more complex and sophisticated MuZero.
+
+Our journey begins with Connect Four, serving as a testing ground and proof of concept. This classic game provides an ideal platform for fine-tuning our approach and algorithms, ensuring they are robust and effective. Once perfected, our endeavor will escalate to the intricate and revered game of chess. The ultimate goal is to develop an AI that not only competes at but excels in chess, demonstrating profound strategic depth and understanding.
+
+This endeavor not only highlights Cogito NTNU's commitment to pushing the boundaries of AI and machine learning but also underscores our passion for blending technology with traditional games, revealing new dimensions of play and strategy. Join us as we explore the frontiers of artificial intelligence, one game at a time.
+
+### Getting Started
+
+This section provides a comprehensive guide to setting up and running the project. By following the steps outlined below, you'll be prepared to embark on a journey of deep reinforcement learning with board games, starting with Connect Four and progressing to Chess.
+
+-----
 
 #### Prerequisites
-In this section you put what is needed for the program to run.
-For example: OS version, programs, libraries, etc.  
 
-Eleifend quam adipiscing vitae proin sagittis nisl rhoncus. Tortor posuere ac ut consequat semper viverra nam libero. Malesuada fames ac turpis egestas integer eget aliquet nibh praesent. Orci dapibus ultrices in iaculis nunc. Morbi leo urna molestie at elementum eu facilisis. Elit sed vulputate mi sit amet mauris commodo quis imperdiet. Ullamcorper morbi tincidunt ornare massa eget. Condimentum lacinia quis vel eros donec ac odio tempor. Nisl vel pretium lectus quam id leo in vitae turpis. Augue mauris augue neque gravida in fermentum.
+Before you begin, ensure that your system meets the following requirements:
+
+- **Operating System**: Linux or macOS is required for the core functionality of this project due to its dependency on the OpenSpiel library. Windows users can participate by setting up the Windows Subsystem for Linux (WSL).
+- **Python Libraries**: Essential libraries such as NumPy and PyTorch are necessary. These are listed in the `requirements.txt` file for easy installation.
+- **Hardware**: For optimal performance, an NVIDIA GPU with CUDA installed is recommended. Running deep reinforcement learning models, especially for complex games like chess, is computationally intensive and may not be feasible on CPU alone.
 
 #### Installation
-In this Section you describe how to install this project in its intended environment.(i.e. how to get it to run)  
 
-In ornare quam viverra orci. Orci eu lobortis elementum nibh tellus molestie nunc. Quisque sagittis purus sit amet volutpat consequat. Etiam dignissim diam quis enim lobortis scelerisque fermentum. Ut pharetra sit amet aliquam id diam maecenas. Integer feugiat scelerisque varius morbi enim nunc faucibus a pellentesque. Malesuada nunc vel risus commodo. Sit amet aliquam id diam maecenas ultricies mi eget. Faucibus vitae aliquet nec ullamcorper.
+1. **Clone the Project**: Begin by cloning the repository to your local machine or development environment.
+
+   ```bash
+   git clone https://github.com/CogitoNTNU/MuZero
+    ```
+
+2. **Install Dependencies**: Navigate to the project directory and install the required Python libraries using pip.
+
+   ```bash
+   pip install -r requirements.txt
+    ```
+
 #### Usage
-------
-In this section you describe how to use the program to obtain the desired result.  
 
-At elementum eu facilisis sed. Viverra nam libero justo laoreet sit amet cursus sit amet. At consectetur lorem donec massa sapien. Quis auctor elit sed vulputate mi. Netus et malesuada fames ac turpis. Nibh cras pulvinar mattis nunc sed blandit libero. Enim blandit volutpat maecenas volutpat blandit. Ut faucibus pulvinar elementum integer. Turpis egestas integer eget aliquet nibh praesent. Lacus laoreet non curabitur gravida arcu ac tortor. Consectetur adipiscing elit duis tristique. Id aliquet lectus proin nibh nisl condimentum id. Urna id volutpat lacus laoreet non curabitur gravida. Mauris pharetra et ultrices neque. Laoreet id donec ultrices tincidunt arcu non sodales neque.
+As the project is currently under development, specific usage instructions are pending. Once the project reaches a runnable state, detailed steps on how to initiate training sessions, as well as how to utilize the AI for playing Connect Four and Chess, will be provided here. Stay tuned for updates on how to leverage this AI to challenge the strategic depths of these classic board games.
+
+-----
+
+By adhering to the above guidelines, you'll be well-prepared to contribute to or experiment with this cutting-edge exploration into deep reinforcement learning for board games. Whether you're a developer, a researcher, or an enthusiast, your journey into AI and strategic gameplay starts here.
+
 ### Team
-------
+
+-----
+
 <!--INSERT PICTURE OF TEAM-->
 <div align="center">
-<img src="https://cogito-ntnu.no/static/img/projects/erpokerpfpwekwpkerwer.png"></img>
+<img src="./pictures/sample_pic.jpg" style="width: 50vw;"></img>
 </div>
 
-Right to left: [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)  
-#### Leader(s):
-- [Jon Rødtang](https://github.com/Jonrodtang)
-- [Example exampleson](https://github.com/Jonrodtang)
+Left to right: [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)  
 
-#### Team members:
-- [Example exampleson](https://github.com/Jonrodtang)
--  [Examplette examplesen](https://github.com/Jonrodtang)
-- [Examplar examples](https://github.com/Jonrodtang)
+#### Leaders
 
+- [Christian Fredrik Johnsen](https://github.com/ChristianFredrikJohnsen)
+  
+- [Brage Kvamme](https://github.com/BrageHK)
+
+#### Team members
+
+- [Ludvig Øvrevik](https://github.com/ludvigovrevik)
+
+- [Kacper Pawlowski](https://github.com/kapi0okapi)
+
+- [Kristian Carlenius](https://github.com/kristiancarlenius)
+
+- [Nils Henrik Lund](https://github.com/Nilsthehacker)
+
+- [Haagen Mæland Moe](https://github.com/Thesmund)
+  
 ### License
-------
+
+-----
 Distributed under the MIT License. See `LICENSE` for more information.
 
-
-
 ### Credits
-------
+
+-----
 Template by [@JonRodtang](https://github.com/Jonrodtang) for  [@CogitoNTNU](https://github.com/CogitoNTNU)  <p align="right">(<a href="#top">back to top</a>)</p>
-
-
-Christian was here!
