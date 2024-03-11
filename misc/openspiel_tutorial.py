@@ -1,7 +1,8 @@
 import copy as copy
 import random
 import time
-
+import gym
+import chess # python-chess
 import numpy as np
 import pyspiel
 from open_spiel.python import games
@@ -24,6 +25,16 @@ def spiel_chess(moves, state):
             break
         noob = np.reshape(np.asarray(state.observation_tensor()), [20, 8, 8])
 
+def python_chess(moves, board):
+    move = 0
+
+    while moves > move:
+        legal_moves = list(board.legal_moves)
+        move = random.choice(legal_moves)
+        board.push(move)
+        move += 1
+
+    return board
 
 def function_time(func, moves, env):
     start_time = time.perf_counter()
@@ -36,7 +47,7 @@ if __name__ == "__main__":
     # normal python chess
     env = gym.make("TicTacToe")
     chess_games = 10
-    pytime = 0
+    pytime, spiel_time = 0
     moves = 200
 
     for i in range(chess_games):
@@ -45,17 +56,15 @@ if __name__ == "__main__":
         pytime += function_time(python_chess, moves, board)
 
     print(f"python chess: {pytime}")
-    # Openspiel chess
+    
     game = pyspiel.load_game("chess")
     shape = game.observation_tensor_shape()
-    spiel_time = 0
 
     for i in range(chess_games):
         state = game.new_initial_state()
         spiel_time += function_time(spiel_chess, moves, state)
 
     print(f"Spiel chess time: {spiel_time}")
-
     print(f"Spiel is {pytime/spiel_time} times faster")
 
     

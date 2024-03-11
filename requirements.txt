@@ -1,5 +1,7 @@
-icecream
 numpy
 torch
 open-spiel
+icecream
+python-chess
+gym
 wandb

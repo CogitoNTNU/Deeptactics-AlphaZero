@@ -2,7 +2,7 @@
 
 
 <div align="center">
-<img src="./pictures/muzero-image.png" style="width: 50vw;"></img>
+<img src="./pictures/muzero-image.png" style="width: 30vw;"></img>
 </div>
 
 <p align="center">
@@ -85,7 +85,7 @@ By adhering to the above guidelines, you'll be well-prepared to contribute to or
 
 <!--INSERT PICTURE OF TEAM-->
 <div align="center">
-<img src="./pictures/sample_pic.jpg" style="width: 50vw;"></img>
+<img src="./pictures/sample_pic.jpg" style="width: 30vw;"></img>
 </div>
 
 Left to right: [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)  
