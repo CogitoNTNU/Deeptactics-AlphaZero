@@ -1,7 +1,8 @@
 import numpy as np
 import pyspiel
 
-from node import Node
+from src.mcts.node import Node
+
 
 
 class Mcts:

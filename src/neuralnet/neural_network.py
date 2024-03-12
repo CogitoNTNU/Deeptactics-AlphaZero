@@ -1,6 +1,6 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 
 class NeuralNetwork(nn.Module):
     def __init__(
@@ -68,7 +68,7 @@ class NeuralNetwork(nn.Module):
             nn.Tanh(),
         )
 
-    def forward(self, x):
+    def forward(self, x) -> tuple[torch.Tensor, torch.Tensor]:
         x = self.initial(x)
         for _ in range(self.res_blocks):
             x = self.block(x) + x
@@ -76,5 +76,4 @@ class NeuralNetwork(nn.Module):
         policy = self.policy(x)
         value = self.value(x)
         return policy, value
-    
     

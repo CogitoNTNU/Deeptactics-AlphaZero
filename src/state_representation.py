@@ -84,31 +84,3 @@ oxx
   [1. 0. 1. 1. 1. 1. 1.],
   [1. 1. 1. 1. 1. 1. 1.]]]
 """
-
-if __name__ == "__main__":
-    import torch
-    from neural_network import NeuralNetwork
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
-    ## 
-
-
-    nn = NeuralNetwork().to(device)
-    state = torch.tensor(
-        [
-            [[0, 0, 0], [1, 0, 0], [0, 1, 1]],  # player 1
-            [[0, 0, 0], [0, 1, 1], [1, 0, 0]],  # player 2
-            [[1, 1, 1], [0, 0, 0], [0, 0, 0]],  # empty squares
-        ],
-        dtype=torch.float,
-    ).unsqueeze(0).to(device) # Unsqueeze to add batch dimension
-    
-    print(torch.__version__)
-    print(state.size())
-
-    x = nn.initial(state)
-    print(x)
-    print(state.size())
-    print(x.size())
-    print(torch.cuda.is_available()) # False if no GPU is available
