@@ -1,9 +1,6 @@
 import numpy as np
 import pyspiel
-
 from src.mcts.node import Node
-
-
 
 class Mcts:
     def __init__(self):
