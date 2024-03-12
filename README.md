@@ -6,13 +6,17 @@
 </div>
 
 <p align="center">
+<a href="" alt="version">
+        <img src=https://img.shields.io/github/actions/workflow/status/CogitoNTNU/MuZero/ci.yml></img></a>
 <a href="https://github.com/CogitoNTNU/README-template/blob/main/LICENSE" alt="LICENSE">
         <img src="https://img.shields.io/badge/license-MIT-green"></img></a>
 <a href="" alt="platform">
         <img src="https://img.shields.io/badge/platform-linux%7CmacOS-lightgrey"></img></a>
 <a href="" alt="version">
         <img src="https://img.shields.io/badge/version-0.0.1-blue"></img></a>
+
 </p>
+
 
 <details>
   <summary>Table of Contents</summary>
