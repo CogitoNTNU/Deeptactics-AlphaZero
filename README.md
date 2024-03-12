@@ -2,14 +2,14 @@
 
 
 <div align="center">
-<img src="./pictures/muzero-image.png" style="width: 30vw;"></img>
+<img src="./docs/pictures/muzero-image.png" style="width: 20vw;"></img>
 </div>
 
 <p align="center">
 <a href="https://github.com/CogitoNTNU/README-template/blob/main/LICENSE" alt="LICENSE">
         <img src="https://img.shields.io/badge/license-MIT-green"></img></a>
 <a href="" alt="platform">
-        <img src="https://img.shields.io/badge/platform-linux%7Cwindows%7CmacOS-lightgrey"></img></a>
+        <img src="https://img.shields.io/badge/platform-linux%7CmacOS-lightgrey"></img></a>
 <a href="" alt="version">
         <img src="https://img.shields.io/badge/version-0.0.1-blue"></img></a>
 </p>
@@ -85,7 +85,7 @@ By adhering to the above guidelines, you'll be well-prepared to contribute to or
 
 <!--INSERT PICTURE OF TEAM-->
 <div align="center">
-<img src="./pictures/sample_pic.jpg" style="width: 30vw;"></img>
+<img src="./docs/pictures/sample_pic.jpg" style="width: 30vw;"></img>
 </div>
 
 Left to right: [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)  
