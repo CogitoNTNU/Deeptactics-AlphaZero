@@ -1,4 +1,4 @@
-from mcts import Mcts
+from src.mcts.mcts import Mcts
 import pyspiel
 
 
