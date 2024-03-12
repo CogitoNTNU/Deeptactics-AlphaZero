@@ -86,10 +86,13 @@ oxx
 """
 
 if __name__ == "__main__":
-    from neural_network import NeuralNetwork
     import torch
+    from neural_network import NeuralNetwork
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+    ## 
+
 
     nn = NeuralNetwork().to(device)
     state = torch.tensor(
