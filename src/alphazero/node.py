@@ -1,14 +1,14 @@
 # M0nt3 Carl0 Tr33 S3arch
 class Node:
 
-    def __init__(self, parent: "Node", state, action: int):
+    def __init__(self, parent: "Node", state, action: int, policy_value: float):
 
         self.children: list["Node"] = []
         """
         A list of game states you can reach from the current node.
         """
-
-        self.parent = parent
+        
+        self.parent: 'Node' = parent
         """
         The node representing the state which came before the current node.
         """
@@ -24,14 +24,19 @@ class Node:
         This will be a number between 0 and 8.
         """
 
-        self.visits = 0
+        self.visits: int = 0
         """
         The number of times this node has been visited.
         """
 
-        self.value = 0
+        self.value: float = 0
         """
         The cumulative reward gained from this game state.
+        """
+        
+        self.policy_value = policy_value
+        """
+        The value of the policy network from the parent node.
         """
 
     def has_children(self) -> bool:

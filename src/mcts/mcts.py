@@ -1,6 +1,8 @@
 import numpy as np
 import pyspiel
+
 from src.mcts.node import Node
+
 
 class Mcts:
     def __init__(self):
@@ -122,3 +124,4 @@ if __name__ == "__main__":
 state.returns() -> rewards for the game.
 state.apply_action(action) -> Play an action [number from 0 to 9]
 """
+
