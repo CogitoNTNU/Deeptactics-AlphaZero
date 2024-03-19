@@ -1,5 +1,5 @@
 import pyspiel
-
+import torch
 from src.alphazero.alphazero import AlphaZero, play_alphazero
 
 # game = pyspiel.load_game("tic_tac_toe")
@@ -14,6 +14,8 @@ from src.alphazero.alphazero import AlphaZero, play_alphazero
 #     print(state)
 #     # print(np.reshape(np.asarray(state.observation_tensor()), game.observation_tensor_shape()))
 #     print()
-    
-    
+
+
 play_alphazero()
+# bob = torch.tensor()
+# print(bob)

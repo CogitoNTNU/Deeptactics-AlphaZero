@@ -5,8 +5,11 @@ import torch
 from src.alphazero.node import Node
 from src.neuralnet.neural_network import NeuralNetwork
 
+### Implement dirichlet noise for root node
+### Implement temperature for move selection
 
-class AlphaZero:
+
+class AlphaZeroTraining:
     def __init__(self):
         self.c = 1.41
         self.game = pyspiel.load_game("tic_tac_toe")
@@ -77,13 +80,18 @@ class AlphaZero:
                 short_tensor[j] = policy_values[i]
                 j += 1
         
-        short_tensor = torch.softmax(short_tensor, dim=0)
         
+        short_tensor = torch.softmax(short_tensor, dim=0)
+        # add dirichlet noise
+        short_tensor.add_(torch.distributions.dirichlet.Dirichlet(torch.tensor([0.03] * len(short_tensor))).sample())
+
         short_tensor_index = 0
         for i in range(len(policy_values)):
             if policy_values[i] != 0:
                 policy_values[i] = short_tensor[short_tensor_index]
                 short_tensor_index += 1
+                
+        
 
         for action in node.state.legal_actions():
             new_state = node.state.clone()
@@ -102,11 +110,10 @@ class AlphaZero:
     def run_simulation(self, state, neural_network: NeuralNetwork, num_simulations=800):
         """
         Selection, expansion & evaulation, backpropagation.
-
         """
         root_node = Node(parent=None, state=state, action=None, policy_value=None)  # Initialize root node.
 
-        for _ in range(num_simulations):  # Do the selection, expansion & evaluation, backpropagation
+        for _ in range(num_simulations): # Do the selection, expansion & evaluation, backpropagation
 
             node = self.select(root_node)  # Get desired childnode
             if not node.state.is_terminal() and not node.has_children():
@@ -135,7 +142,7 @@ def play_alphazero():
     # game = pyspiel.load_game("chess")
     state = game.new_initial_state()
     first_state = state.clone()
-    alphazero_mcts = AlphaZero()
+    alphazero_mcts = AlphaZeroTraining()
     nn = NeuralNetwork().to(alphazero_mcts.device)
     print("Using ", "cuda" if torch.cuda.is_available() else "cpu")
     while (not state.is_terminal()):

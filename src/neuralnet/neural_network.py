@@ -77,3 +77,6 @@ class NeuralNetwork(nn.Module):
         value = self.value(x)
         return policy, value
     
+    def save(self, path: str) -> None:
+        torch.save(self.state_dict(), path)
+    
