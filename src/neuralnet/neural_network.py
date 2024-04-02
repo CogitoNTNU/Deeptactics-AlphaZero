@@ -68,7 +68,7 @@ class NeuralNetwork(nn.Module):
             nn.Tanh(),
         )
 
-    def forward(self, x) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         x = self.initial(x)
         for _ in range(self.res_blocks):
             x = self.block(x) + x
