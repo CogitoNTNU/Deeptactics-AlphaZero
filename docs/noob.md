@@ -24,3 +24,21 @@ bruker numpy.random.dirichlet(value_probability)
 5. Lage self play games. Alphazero vs. Alphazero
 6. Regne ut entropy_loss fra policy network, MSE Loss på value network, og L2 regulization 
 7. backpropagation basert på self play games
+
+## Definition of the PUCT formula
+
+PUCT:
+
+```python
+ def PUCT(self, node: Node) -> float:
+        if node.visits == 0:
+            Q = 0  # You don't know the value of a state you haven't visited. Get devision error
+        else:
+            Q = node.value / node.visits  # Take the average
+
+        U = (self.c * node.policy_value * np.sqrt(node.parent.visits) / (1 + node.visits))
+
+        PUCT = Q + U
+
+        return PUCT
+```
