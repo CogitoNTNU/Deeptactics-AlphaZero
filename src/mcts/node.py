@@ -1,7 +1,10 @@
+import pyspiel
 # M0nt3 Carl0 Tr33 S3arch
+
+pyspiel.load_game()
 class Node:
 
-    def __init__(self, parent: "Node", state, action: int):
+    def __init__(self, parent: "Node", state: pyspiel.State, action: int):
 
         self.children: list["Node"] = []
         """
@@ -13,7 +16,7 @@ class Node:
         The node representing the state which came before the current node.
         """
 
-        self.state = state
+        self.state: pyspiel.State = state
         """"
         The current game state.
         """
