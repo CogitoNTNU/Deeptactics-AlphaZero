@@ -1,4 +1,4 @@
-from src.alphazero.alphazero import play_alphazero
+# from src.alphazero.alphazero import play_alphazero
+from src.alphazero.alphazero_training import train_alphazero
 
-
-play_alphazero()
+train_alphazero()

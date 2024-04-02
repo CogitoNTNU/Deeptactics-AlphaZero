@@ -1,18 +1,21 @@
 import numpy as np
 import pyspiel
 import torch
+from torch.distributions.dirichlet import Dirichlet
 
-from src.utils.tensor_utils import normalize_policy_values
-from src.utils.nn_utils import forward_state
 from src.alphazero.node import Node
 from src.neuralnet.neural_network import NeuralNetwork
+from src.utils.nn_utils import forward_state
+from src.utils.tensor_utils import normalize_policy_values
 
 
 class AlphaZero:
     def __init__(self):
         self.game = pyspiel.load_game("tic_tac_toe")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.c = torch.tensor(1.0, dtype=torch.float, device=self.device) # Exploration constant
+        self.c = torch.tensor(4.0, dtype=torch.float, device=self.device) # Exploration constant
+        self.a = 0.3
+        self.e = 0.75
 
     # @profile
     def vectorized_select(self, node: Node) -> Node: # OPTIMIZATION for GPU, great speedup is expected when number of children is large.
@@ -29,7 +32,6 @@ class AlphaZero:
             values = torch.tensor([child.value for child in node.children], device=self.device, dtype=torch.float)
             policy_values = torch.tensor([child.policy_value for child in node.children], device=self.device, dtype=torch.float)
             parent_visits_sqrt = torch.tensor(node.visits, device=self.device, dtype=torch.float).sqrt_()
-
 
             # Compute PUCT for all children in a vectorized manner
             Q = torch.where(visits > 0, values / visits, torch.zeros_like(visits))
@@ -102,10 +104,11 @@ class AlphaZero:
                     print("Player is none for some reason...")
                 winner = node.state.returns()[player]
             self.backpropagate(node, winner)
-        
         return max(root_node.children, key=lambda node: node.visits).action # The best action is the one with the most visits
-
+        
+        
 def play_alphazero():
+
     game = pyspiel.load_game("tic_tac_toe")
     state = game.new_initial_state()
     alphazero_mcts = AlphaZero()

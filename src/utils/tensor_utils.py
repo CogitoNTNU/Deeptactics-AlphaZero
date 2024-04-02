@@ -12,6 +12,7 @@ Optimizations are therefore much easier to implement.
 
 import torch
 
+
 def normalize_policy_values(nn_policy_values: torch.Tensor, legal_actions: torch.Tensor) -> None:
         """
         Takes in a tensor of policy values output by the neural network. It performs a softmax normalization on the policy values,
@@ -36,3 +37,4 @@ def normalize_policy_values(nn_policy_values: torch.Tensor, legal_actions: torch
         probabilities = torch.softmax(legal_policy_values, dim=0) ## Normalize the policy values to form a probability distribution
 
         nn_policy_values[legal_actions] = probabilities ## Insert the normalized policy values back into the original tensor
+
