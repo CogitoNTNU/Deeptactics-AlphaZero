@@ -10,23 +10,9 @@ from src.neuralnet.neural_network import NeuralNetwork
 
 class AlphaZero:
     def __init__(self):
-        self.c = 1.41
         self.game = pyspiel.load_game("tic_tac_toe")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
-    def PUCT(self, node: Node) -> float:
-        if node.visits == 0:
-            Q = 0  # You don't know the value of a state you haven't visited. Get devision error
-        else:
-            Q = node.value / node.visits  # Take the average
-
-        U = (self.c * node.policy_value * np.sqrt(node.parent.visits) / (1 + node.visits))
-
-        PUCT = Q + U
-
-        return PUCT
-
-    
+        self.c = torch.tensor(1.0, dtype=torch.float, device=self.device) # Exploration constant
 
     # @profile
     def vectorized_select(self, node: Node) -> Node: # OPTIMIZATION for GPU, great speedup is expected when number of children is large.
@@ -34,28 +20,24 @@ class AlphaZero:
         Select stage of MCTS.
         Go through the game tree, layer by layer.
         Chooses the node with the highest UCB-score at each layer.
-        Returns a
+        Returns a leaf node.
         """
 
-        # Gather data
         while node.has_children():
+            
             visits = torch.tensor([child.visits for child in node.children], device=self.device, dtype=torch.float)
             values = torch.tensor([child.value for child in node.children], device=self.device, dtype=torch.float)
             policy_values = torch.tensor([child.policy_value for child in node.children], device=self.device, dtype=torch.float)
-            parent_visits = torch.tensor(node.visits, device=self.device, dtype=torch.float)
-            parent_visits_sqrt = torch.sqrt(parent_visits)
+            parent_visits_sqrt = torch.tensor(node.visits, device=self.device, dtype=torch.float).sqrt_()
+
 
             # Compute PUCT for all children in a vectorized manner
-            Q = torch.zeros_like(visits)  # Handle division by zero for unvisited nodes
-            Q[visits > 0] = values[visits > 0] / visits[visits > 0]
+            Q = torch.where(visits > 0, values / visits, torch.zeros_like(visits))
             U = self.c * policy_values * parent_visits_sqrt / (1 + visits)
             puct_values = Q + U
 
-            # Find the index of the child with the highest PUCT value
-            max_puct_index = torch.argmax(puct_values).item()
-            
-            # Return the best child node based on PUCT value
-            node = node.children[max_puct_index]
+            max_puct_index = torch.argmax(puct_values).item() # Find the index of the child with the highest PUCT value
+            node = node.children[max_puct_index] # Return the best child node based on PUCT value
         
         return node
 
@@ -98,10 +80,10 @@ class AlphaZero:
             node.value += result
             self.backpropagate(node.parent, -result)
 
-    # @profile
+    @profile
     def run_simulation(self, state, neural_network: NeuralNetwork, num_simulations=800):
         """
-        Selection, expansion & evaulation, backpropagation.
+        Selection, expansion & evaluation, backpropagation.
 
         """
         root_node = Node(parent=None, state=state, action=None, policy_value=None)  # Initialize root node.
