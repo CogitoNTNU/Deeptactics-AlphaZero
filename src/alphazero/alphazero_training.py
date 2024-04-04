@@ -138,40 +138,88 @@ class AlphaZero:
         
 
         
-def train_alphazero():
+def play_alphazero_game(alphazero_mcts: AlphaZero, nn: NeuralNetwork) -> list[tuple]:
 
-    game = pyspiel.load_game("tic_tac_toe")
-    state = game.new_initial_state()
-    alphazero_mcts = AlphaZero()
-    nn = NeuralNetwork().to(alphazero_mcts.device)
-    print("Using ", "cuda" if torch.cuda.is_available() else "cpu")
-    i = 1
-    states, all_probability_visits = [], []
-    shape = game.observation_tensor_shape()
-
+    state = alphazero_mcts.game.new_initial_state()
+    shape = alphazero_mcts.game.observation_tensor_shape()
+    states, mcts_probability_visits = [], []
+    
+    
+    move_number = 1
     while (not state.is_terminal()):
-        action, probability_visits = alphazero_mcts.run_simulation(state, nn, i)
-        
+        action, probability_visits = alphazero_mcts.run_simulation(state, nn, move_number)
+        print(len(probability_visits))
         state_tensor = torch.reshape(torch.tensor(state.observation_tensor(), device=alphazero_mcts.device), shape).unsqueeze(0)
         states.append(state_tensor)
-        all_probability_visits.append(probability_visits)
-
+        mcts_probability_visits.append(probability_visits)
         print("best action\t", action, "\n")
         state.apply_action(action)
-        i += 1
+        move_number += 1
     
     winner = state.returns()
     tuple_list = []
     for i in range(len(states)):
-        tuple_list.append((states[i], all_probability_visits[i], winner[i % 2]))
+        tuple_list.append((states[i], mcts_probability_visits[i], winner[i % 2]))
 
-    print(tuple_list)
-    # lagre [(state, normalized_number_of_visits, actual_winner)]
+    return tuple_list # [ (1, 2, 3), (1, 2, 3), (1, 2, 3), ]
+
+
+
+    # MSE Loss value: (y-y_hat)^2 - y = actual winner value, y_hat = predicted target value
+    
+import torch
+import torch.optim as optim
+from torch.nn import MSELoss, CrossEntropyLoss
+
+def train_alphazero(num_games: int, epochs: int):
+
+    alphazero_mcts = AlphaZero()
+    nn = NeuralNetwork().to(alphazero_mcts.device)
+    optimizer = optim.Adam(nn.parameters(), lr=0.001)  # Adjust learning rate as needed
+
+    mse_loss_fn = MSELoss()
+    cross_entropy_loss_fn = CrossEntropyLoss()
+
+    training_data = []
+
+    # Generate training data
+    for _ in range(num_games):
+        new_training_data = play_alphazero_game(alphazero_mcts, nn)
+        training_data.extend(new_training_data)
+
+    for epoch in range(epochs):
+        
+        total_loss = 0
+        
+        for state_tensor, policy, value in training_data:
+            
+            optimizer.zero_grad() # Reset gradients
+            policy_pred, value_pred = nn.forward(state_tensor) # Forward pass
+            print(policy_pred)
+            print(value_pred)
+            policy_pred.squeeze(0)
+            value_pred.squeeze(0)
+
+            # (2, 3, 5)
+            # (, 2, 3, 5)
+            # (2, 3, 1, 5)
+
+            # Calculate loss
+            value_loss = mse_loss_fn(value_pred, torch.tensor([value], dtype=torch.float, device=alphazero_mcts.device))
+            # policy_loss = cross_entropy_loss_fn(policy_pred, torch.tensor(policy, dtype=torch.float, device=alphazero_mcts.device).unsqueeze(0))
+            # regulization = sum(w^2)
+            loss = value_loss # + policy_loss
+            
+            # Backward pass and optimize
+            loss.backward()
+            optimizer.step()
+
+            total_loss += loss.item() # Keep track of loss
+
+        print(f'Epoch {epoch+1}, Total Loss: {total_loss}')
     
     
     nn.save("./models/nn")
-    print(state.returns())
-    print(type(state))
 
 
 """
