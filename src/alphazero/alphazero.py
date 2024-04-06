@@ -14,8 +14,6 @@ class AlphaZero:
         self.game = pyspiel.load_game("tic_tac_toe")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.c = torch.tensor(4.0, dtype=torch.float, device=self.device) # Exploration constant
-        self.a = 0.3
-        self.e = 0.75
 
     # @profile
     def vectorized_select(self, node: Node) -> Node: # OPTIMIZATION for GPU, great speedup is expected when number of children is large.
@@ -82,7 +80,7 @@ class AlphaZero:
             node.value += result
             self.backpropagate(node.parent, -result)
 
-    @profile
+    # @profile
     def run_simulation(self, state, neural_network: NeuralNetwork, num_simulations=800):
         """
         Selection, expansion & evaluation, backpropagation.
@@ -109,22 +107,22 @@ class AlphaZero:
         
 def play_alphazero():
 
-    game = pyspiel.load_game("tic_tac_toe")
-    state = game.new_initial_state()
     alphazero_mcts = AlphaZero()
-    nn = NeuralNetwork().to(alphazero_mcts.device)
-    print("Using ", "cuda" if torch.cuda.is_available() else "cpu")
+    nn = NeuralNetwork().load("./models/nn").to(alphazero_mcts.device)
+    state = alphazero_mcts.game.new_initial_state()
+    
     while (not state.is_terminal()):
         action = alphazero_mcts.run_simulation(state, nn)
         print("best action\t", action, "\n")
         state.apply_action(action)
         print(state)
-    nn.save("./models/nn")
-    print(state.returns())
-    print(type(state))
+    
+    print("Game over!")
+    print("Player 1 score: ", state.returns()[0], "\nPlayer 2 score: ", state.returns()[1])
+
 
 
 """
 state.returns() -> rewards for the game.
-state.apply_action(action) -> Play an action [number from 0 to 9]
+state.apply_action(action) -> Play an action [number from 0 to 8 for tic-tac-toe]
 """
