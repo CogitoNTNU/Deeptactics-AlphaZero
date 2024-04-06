@@ -1,22 +1,44 @@
-import numpy as np
 import pyspiel
 import torch
-from torch.distributions.dirichlet import Dirichlet
+import torch.optim as optim
+from torch.nn import MSELoss, CrossEntropyLoss
 
 from src.alphazero.node import Node
 from src.neuralnet.neural_network import NeuralNetwork
 from src.utils.nn_utils import forward_state
-from src.utils.tensor_utils import normalize_policy_values
+from src.utils.random_utils import generate_dirichlet_noise
+from src.utils.tensor_utils import normalize_policy_values, normalize_policy_values_with_noise
+
 
 
 class AlphaZero:
+
     def __init__(self):
         self.game = pyspiel.load_game("tic_tac_toe")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.c = torch.tensor(4.0, dtype=torch.float, device=self.device) # Exploration constant
-        self.a = 0.3
-        self.e = 0.75
-        self.temperature_moves = 30
+        
+        self.c = torch.tensor(1.41, dtype=torch.float, device=self.device) # Exploration constant
+        """
+        An exploration constant, used when calculating PUCT-values.
+        """
+
+        self.a: float = 0.3
+        """
+        Alpha-value, a parameter in the Dirichlet-distribution.
+        """
+
+        self.e: float = 0.75
+        """
+        Epsilon-value, determines how many percent of ... is determined by PUCT,
+        and how much is determined by Dirichlet-distribution.
+        """
+
+        self.temperature_moves: int = 30
+        """
+        Up to a certain number of moves have been played, the move played is taken from a
+        probability distribution based on the most visited states.
+        After temperature_moves, the move played is deterministically the one visited the most.
+        """
 
     # @profile
     def vectorized_select(self, node: Node) -> Node: # OPTIMIZATION for GPU, great speedup is expected when number of children is large.
@@ -59,13 +81,9 @@ class AlphaZero:
         """
         Takes in a node, and adds all children.
         The children need a state, an action and a policy value.
-        Will not be run if you encounter an already visited state, and not if the state is terminal.
-        
-        The policy values is a tensor output from the neural network, and will most likely not be a probability vector.
-        Therefore, we normalize the policy values by applying the 
-         normalization function to form a probability
-        distribution for action selection.
+        Policy values are normalized before being applied to the children.
         """
+
         legal_actions = node.state.legal_actions()
         normalize_policy_values(nn_policy_values, legal_actions)
 
@@ -76,19 +94,38 @@ class AlphaZero:
     
     # @profile
     def dirichlet_expand(self, node: Node, nn_policy_values: torch.Tensor):
+        """
+        Method for expanding the root node with dirichlet noise.
+        Is only run on the root node.
+        The amount of exploration is determined by the epsilon value, high epsilon gives low exploration.
         
-        legal_actions = node.state.legal_actions()
-        num_children = len(legal_actions)
-        
-        alpha_tensor = torch.full((num_children, ), self.a)
-        noise = Dirichlet(alpha_tensor).sample()
+        Parameters:
+        - node: Node - The root node of the game tree
+        - nn_policy_values: torch.Tensor - The policy values output by the neural network
 
-        normalize_policy_values(nn_policy_values, legal_actions)
-        for i, action in enumerate(legal_actions): # Add the children with correct policy values
+        NOTE: The nn_policy_values will include the policy values for all actions, not just the legal ones.
+        In the following example, we are showing a simplified example where we only have 3 actions, and all
+        of them are legal. The policy values are softmaxed, and then dirichlet noise is added to the policy values.
+
+        Example:
+        
+        Epsilon = 0.75\n
+        NN policy values = [0.3, -0.1, 0.42]\n
+        softmaxed NN policy values = [0.3574, 0.2396, 0.4030]\n
+        Dirichlet noise = [0.5, 0.2, 0.3]\n
+        Final policy values = 0.75 * [0.3574, 0.2396, 0.4030] + 0.25 * [0.5, 0.2, 0.3]
+
+        -> [0.3931, 0.2297, 0.3772]
+        """
+
+        legal_actions = node.state.legal_actions()
+        noise = generate_dirichlet_noise(len(legal_actions), self.a, self.device)
+        normalize_policy_values_with_noise(nn_policy_values, legal_actions, noise, self.e)
+        
+        for action in legal_actions: # Add the children with correct policy values
             new_state = node.state.clone()
             new_state.apply_action(action)
-            policy_value = self.e * nn_policy_values[action] + (1 - self.e) * noise[i]
-            node.children.append(Node(node, new_state, action, policy_value))
+            node.children.append(Node(node, new_state, action, nn_policy_values[action]))
 
     # @profile
     def backpropagate(self, node: Node, result: float):
@@ -104,7 +141,7 @@ class AlphaZero:
     def run_simulation(self, state, neural_network: NeuralNetwork, move_number, num_simulations=800):
         """
         Selection, expansion & evaluation, backpropagation.
-
+        Returns the best action to take.
         """
         root_node = Node(parent=None, state=state, action=None, policy_value=None)  # Initialize root node.
         
@@ -167,9 +204,7 @@ def play_alphazero_game(alphazero_mcts: AlphaZero, nn: NeuralNetwork) -> list[tu
 
     # MSE Loss value: (y-y_hat)^2 - y = actual winner value, y_hat = predicted target value
     
-import torch
-import torch.optim as optim
-from torch.nn import MSELoss, CrossEntropyLoss
+
 
 def train_alphazero(num_games: int, epochs: int):
 
