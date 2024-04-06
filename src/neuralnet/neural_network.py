@@ -79,4 +79,27 @@ class NeuralNetwork(nn.Module):
     
     def save(self, path: str) -> None:
         torch.save(self.state_dict(), path)
+
+    @classmethod
+    def load(cls, path: str, hidden_dimension=256, input_dimension=3, res_blocks=5, game_size=9, legal_moves=9):
+        """
+        Loads the model from the specified path.
+
+        Parameters:
+        - path: str - The path to the saved model state dictionary.
+        - hidden_dimension: int - The dimension of the hidden layers.
+        - input_dimension: int - The input dimension.
+        - res_blocks: int - The number of residual blocks.
+        - game_size: int - The size of the game board.
+        - legal_moves: int - The number of legal moves.
+
+        Returns:
+        - An instance of NeuralNetwork with weights loaded from the specified path.
+        """
+        
+        model = cls(hidden_dimension=hidden_dimension, input_dimension=input_dimension, res_blocks=res_blocks, game_size=game_size, legal_moves=legal_moves)        
+        state_dict = torch.load(path)
+        model.load_state_dict(state_dict)
+        
+        return model
     
