@@ -5,19 +5,20 @@ from torch.nn import MSELoss, CrossEntropyLoss
 
 from src.alphazero.node import Node
 from src.neuralnet.neural_network import NeuralNetwork
-from src.utils.nn_utils import forward_state
+from src.utils.nn_utils import forward_state, reshape_pyspiel_state
 from src.utils.random_utils import generate_dirichlet_noise
 from src.utils.tensor_utils import normalize_policy_values, normalize_policy_values_with_noise
 
 
 
+
 class AlphaZero:
 
-    def __init__(self):
-        self.game = pyspiel.load_game("tic_tac_toe")
+    def __init__(self, game_name: str = "tic_tac_toe"):
+        self.game = pyspiel.load_game(game_name)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
-        self.c = torch.tensor(1.41, dtype=torch.float, device=self.device) # Exploration constant
+        self.c = torch.tensor(4.0, dtype=torch.float, device=self.device) # Exploration constant
         """
         An exploration constant, used when calculating PUCT-values.
         """
@@ -57,7 +58,7 @@ class AlphaZero:
             parent_visits_sqrt = torch.tensor(node.visits, device=self.device, dtype=torch.float).sqrt_()
 
             # Compute PUCT for all children in a vectorized manner
-            Q = torch.where(visits > 0, values / visits, torch.zeros_like(visits))
+            Q = torch.where(visits > 0, values / visits, torch.zeros_like(visits)) # TODO: Check if we can replace zeros_like with just 0.
             U = self.c * policy_values * parent_visits_sqrt / (1 + visits)
             puct_values = Q + U
 
@@ -138,14 +139,13 @@ class AlphaZero:
             self.backpropagate(node.parent, -result)
 
     # @profile
-    def run_simulation(self, state, neural_network: NeuralNetwork, move_number, num_simulations=800):
+    def run_simulation(self, state, neural_network: NeuralNetwork, move_number, num_simulations=300):
         """
         Selection, expansion & evaluation, backpropagation.
-        Returns the best action to take.
+        Returns an action to be played.
         """
-        root_node = Node(parent=None, state=state, action=None, policy_value=None)  # Initialize root node.
         
-        ## Add dirichlet noise to root node policy_values. 
+        root_node = Node(parent=None, state=state, action=None, policy_value=None)  # Initialize root node.
         policy, value = self.evaluate(root_node, neural_network)
         self.dirichlet_expand(root_node, policy)
 
@@ -154,110 +154,105 @@ class AlphaZero:
             node = self.vectorized_select(root_node)  # Get desired child node
             if not node.state.is_terminal() and not node.has_children():
                 policy, value = self.evaluate(node, neural_network) # Evaluate the node, using the neural network
-                # print("Value:", value, "Policy", policy)
                 self.expand(node, policy)  # creates all its children
                 winner = value
             else:
                 player = (node.parent.state.current_player())  # Here state is terminal, so we get the winning player
-                if player is None:
-                    print("Player is none for some reason...")
                 winner = node.state.returns()[player]
             self.backpropagate(node, winner)
 
-        normalized_root_node_children_visits = [node.visits / (root_node.visits) for node in root_node.children]
+        normalized_root_node_children_visits = torch.tensor([node.visits / (root_node.visits) for node in root_node.children], device=self.device, dtype=torch.float)        
 
         if move_number > self.temperature_moves:
             return max(root_node.children, key=lambda node: node.visits).action, normalized_root_node_children_visits # The best action is the one with the most visits
         else:
-            probabilities = torch.softmax(torch.tensor([node.visits for node in root_node.children], dtype=float), dim=0)
+            probabilities = torch.softmax(normalized_root_node_children_visits, dim=0) # Temperature-like exploration
             return root_node.children[torch.multinomial(probabilities, num_samples=1).item()].action, normalized_root_node_children_visits
         
         
-
-        
-def play_alphazero_game(alphazero_mcts: AlphaZero, nn: NeuralNetwork) -> list[tuple]:
+def play_alphazero_game(alphazero_mcts: AlphaZero, nn: NeuralNetwork) -> list[tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
 
     state = alphazero_mcts.game.new_initial_state()
     shape = alphazero_mcts.game.observation_tensor_shape()
-    states, mcts_probability_visits = [], []
-    
-    
+    game_data = []
     move_number = 1
+    
+    # Problem, probability visits is not a tensor, and the length of the lists are dynamic, number of elements corresponds to number of legal actions,
+    # instead of the number of possible actions, which the neural network will output.
+    
     while (not state.is_terminal()):
+        print(state, '\n~~~~~~~~~~~~~~~')
         action, probability_visits = alphazero_mcts.run_simulation(state, nn, move_number)
-        print(len(probability_visits))
-        state_tensor = torch.reshape(torch.tensor(state.observation_tensor(), device=alphazero_mcts.device), shape).unsqueeze(0)
-        states.append(state_tensor)
-        mcts_probability_visits.append(probability_visits)
-        print("best action\t", action, "\n")
+        game_data.append((reshape_pyspiel_state(state, shape, alphazero_mcts.device), probability_visits))
         state.apply_action(action)
         move_number += 1
-    
-    winner = state.returns()
-    tuple_list = []
-    for i in range(len(states)):
-        tuple_list.append((states[i], mcts_probability_visits[i], winner[i % 2]))
 
-    return tuple_list # [ (1, 2, 3), (1, 2, 3), (1, 2, 3), ]
-
-
+    print(state, '\n~~~~~~~~~~~~~~~')
+    rewards = state.returns() 
+    return [(state, probability_visits, torch.tensor([rewards[i % 2]], dtype=torch.float, device=alphazero_mcts.device)) for i, (state, probability_visits) in enumerate(game_data)]
 
     # MSE Loss value: (y-y_hat)^2 - y = actual winner value, y_hat = predicted target value
     
 
+from torch.utils.data import DataLoader, TensorDataset
 
 def train_alphazero(num_games: int, epochs: int):
 
-    alphazero_mcts = AlphaZero()
-    nn = NeuralNetwork().to(alphazero_mcts.device)
-    optimizer = optim.Adam(nn.parameters(), lr=0.001)  # Adjust learning rate as needed
+    try:
+        alphazero_mcts = AlphaZero()
+        nn = NeuralNetwork().load("./models/nn").to(alphazero_mcts.device)
+        optimizer = optim.Adam(nn.parameters(), lr=0.001, weight_decay=1e-4)  # Weight decay is L2 regularization
 
-    mse_loss_fn = MSELoss()
-    cross_entropy_loss_fn = CrossEntropyLoss()
+        mse_loss_fn = MSELoss()
+        cross_entropy_loss = CrossEntropyLoss() # https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html
 
-    training_data = []
+        training_data: list[tuple[torch.Tensor, torch.Tensor, torch.Tensor]] = []
 
-    # Generate training data
-    for _ in range(num_games):
-        new_training_data = play_alphazero_game(alphazero_mcts, nn)
-        training_data.extend(new_training_data)
+        # Generate training data
+        for _ in range(num_games):
+            new_training_data = play_alphazero_game(alphazero_mcts, nn)
+            print(f'Game {_ + 1} finished')
+            training_data.extend(new_training_data)
 
-    for epoch in range(epochs):
-        
-        total_loss = 0
-        
-        for state_tensor, policy, value in training_data:
+        for epoch in range(epochs):
             
-            optimizer.zero_grad() # Reset gradients
-            policy_pred, value_pred = nn.forward(state_tensor) # Forward pass
-            print(policy_pred)
-            print(value_pred)
-            policy_pred.squeeze(0)
-            value_pred.squeeze(0)
-
-            # (2, 3, 5)
-            # (, 2, 3, 5)
-            # (2, 3, 1, 5)
-
-            # Calculate loss
-            value_loss = mse_loss_fn(value_pred, torch.tensor([value], dtype=torch.float, device=alphazero_mcts.device))
-            # policy_loss = cross_entropy_loss_fn(policy_pred, torch.tensor(policy, dtype=torch.float, device=alphazero_mcts.device).unsqueeze(0))
-            # regulization = sum(w^2)
-            loss = value_loss # + policy_loss
+            total_loss = 0
             
-            # Backward pass and optimize
-            loss.backward()
-            optimizer.step()
+            for state_tensor, target_policy, target_value in training_data:
+                ### TODO: Possibly implement torch.stack, instead of doing this for-loop.
+                ### GPU would easily handle gradient descent on the entire dataset,
+                ### especially if you are thinking about stuff like 30 games of tic-tac-toe.
+                
+                optimizer.zero_grad() # Reset gradients
+                policy_pred, value_pred = nn.forward(state_tensor) # Forward pass
+                
+                legal_actions = state_tensor[0][0].flatten().nonzero().squeeze(-1)
 
-            total_loss += loss.item() # Keep track of loss
+                value_pred = value_pred.squeeze(0) # Remove batch dimension
+                policy_pred = policy_pred.squeeze(0) # Remove batch dimension
+                
+                policy_pred = policy_pred[legal_actions] # Ensure that the policy_pred is a tensor, even if legal_actions is a single number.
+                
+                # Calculate loss
+                value_loss = mse_loss_fn(value_pred, target_value)
+                policy_loss = cross_entropy_loss(policy_pred, target_policy)
+                
+                loss = value_loss + policy_loss
+                
+                # Backward pass and optimize
+                loss.backward()
+                optimizer.step()
 
-        print(f'Epoch {epoch+1}, Total Loss: {total_loss}')
+                total_loss += loss.item() # Keep track of loss
+
+            print(f'Epoch {epoch+1}, Total Loss: {total_loss}')
+        
+        
+        nn.save("./models/nn")
+        print("Model saved!")
     
-    
-    nn.save("./models/nn")
+    except KeyboardInterrupt:
+        nn.save("./models/nn")
+        print("\nModel saved!")
+        raise KeyboardInterrupt
 
-
-"""
-state.returns() -> rewards for the game.
-state.apply_action(action) -> Play an action [number from 0 to 9]
-"""

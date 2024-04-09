@@ -1,7 +1,5 @@
-import numpy as np
 import pyspiel
 import torch
-from torch.distributions.dirichlet import Dirichlet
 
 from src.alphazero.node import Node
 from src.neuralnet.neural_network import NeuralNetwork
@@ -10,8 +8,8 @@ from src.utils.tensor_utils import normalize_policy_values
 
 
 class AlphaZero:
-    def __init__(self):
-        self.game = pyspiel.load_game("tic_tac_toe")
+    def __init__(self, game_name: str = "tic_tac_toe"):
+        self.game = pyspiel.load_game(game_name)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.c = torch.tensor(4.0, dtype=torch.float, device=self.device) # Exploration constant
 
@@ -49,6 +47,7 @@ class AlphaZero:
         """
         shape = self.game.observation_tensor_shape() # The shape of the input tensor (without batch dimension). Returns [3, 3, 3] for tic-tac-toe.
         policy, value = forward_state(node.state, shape, self.device, neural_network)
+        # print(f'Policy: {policy}, Value: {value}')
         return policy, value
 
     # @profile
@@ -64,7 +63,6 @@ class AlphaZero:
         """
         legal_actions = node.state.legal_actions()
         normalize_policy_values(nn_policy_values, legal_actions)
-
         for action in legal_actions: # Add the children with correct policy values
             new_state = node.state.clone()
             new_state.apply_action(action)
@@ -81,12 +79,16 @@ class AlphaZero:
             self.backpropagate(node.parent, -result)
 
     # @profile
-    def run_simulation(self, state, neural_network: NeuralNetwork, num_simulations=800):
+    def run_simulation(self, state, neural_network: NeuralNetwork, num_simulations=800): # Num-simulations 800 is good for tic-tac-toe
         """
         Selection, expansion & evaluation, backpropagation.
 
         """
         root_node = Node(parent=None, state=state, action=None, policy_value=None)  # Initialize root node.
+        policy, value = self.evaluate(root_node, neural_network)  # Evaluate the root node
+        normalize_policy_values(policy, root_node.state.legal_actions())  # Normalize the policy values
+
+        print("Root node policy values: ", policy)
 
         for _ in range(num_simulations):  # Do the selection, expansion & evaluation, backpropagation
 
@@ -98,8 +100,6 @@ class AlphaZero:
                 winner = value
             else:
                 player = (node.parent.state.current_player())  # Here state is terminal, so we get the winning player
-                if player is None:
-                    print("Player is none for some reason...")
                 winner = node.state.returns()[player]
             self.backpropagate(node, winner)
         return max(root_node.children, key=lambda node: node.visits).action # The best action is the one with the most visits
