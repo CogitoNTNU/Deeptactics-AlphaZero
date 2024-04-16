@@ -1,7 +1,7 @@
 import pyspiel
 import torch
 import torch.optim as optim
-from torch.nn import MSELoss, CrossEntropyLoss
+from torch.nn import MSELoss, CrossEntropyLoss, Module
 
 from src.alphazero.node import Node
 from src.neuralnet.neural_network import NeuralNetwork
@@ -12,11 +12,13 @@ from src.utils.tensor_utils import normalize_policy_values, normalize_policy_val
 
 
 
-class AlphaZero:
+class AlphaZero(Module):
 
     def __init__(self, game_name: str = "tic_tac_toe"):
+        super(AlphaZero, self).__init__()
         self.game = pyspiel.load_game(game_name)
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda")
+        # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
         self.c = torch.tensor(4.0, dtype=torch.float, device=self.device) # Exploration constant
         """
@@ -58,7 +60,7 @@ class AlphaZero:
             parent_visits_sqrt = torch.tensor(node.visits, device=self.device, dtype=torch.float).sqrt_()
 
             # Compute PUCT for all children in a vectorized manner
-            Q = torch.where(visits > 0, values / visits, torch.zeros_like(visits)) # TODO: Check if we can replace zeros_like with just 0.
+            Q = torch.where(visits > 0, values / visits, 0) # TODO: Check if we can replace zeros_like with just 0.
             U = self.c * policy_values * parent_visits_sqrt / (1 + visits)
             puct_values = Q + U
 
@@ -138,8 +140,8 @@ class AlphaZero:
             node.value += result
             self.backpropagate(node.parent, -result)
 
-    # @profile
-    def run_simulation(self, state, neural_network: NeuralNetwork, move_number, num_simulations=300):
+    @profile
+    def run_simulation(self, state, neural_network: NeuralNetwork, move_number, num_simulations=800):
         """
         Selection, expansion & evaluation, backpropagation.
         Returns an action to be played.
@@ -163,11 +165,11 @@ class AlphaZero:
 
         normalized_root_node_children_visits = torch.tensor([node.visits / (root_node.visits) for node in root_node.children], device=self.device, dtype=torch.float)        
 
-        if move_number > self.temperature_moves:
-            return max(root_node.children, key=lambda node: node.visits).action, normalized_root_node_children_visits # The best action is the one with the most visits
-        else:
-            probabilities = torch.softmax(normalized_root_node_children_visits, dim=0) # Temperature-like exploration
-            return root_node.children[torch.multinomial(probabilities, num_samples=1).item()].action, normalized_root_node_children_visits
+        # if move_number > self.temperature_moves:
+        return max(root_node.children, key=lambda node: node.visits).action, normalized_root_node_children_visits # The best action is the one with the most visits
+        # else:
+        #     probabilities = torch.softmax(normalized_root_node_children_visits, dim=0) # Temperature-like exploration
+        #     return root_node.children[torch.multinomial(probabilities, num_samples=1).item()].action, normalized_root_node_children_visits
         
         
 def play_alphazero_game(alphazero_mcts: AlphaZero, nn: NeuralNetwork) -> list[tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
@@ -181,13 +183,13 @@ def play_alphazero_game(alphazero_mcts: AlphaZero, nn: NeuralNetwork) -> list[tu
     # instead of the number of possible actions, which the neural network will output.
     
     while (not state.is_terminal()):
-        print(state, '\n~~~~~~~~~~~~~~~')
+        # print(state, '\n~~~~~~~~~~~~~~~')
         action, probability_visits = alphazero_mcts.run_simulation(state, nn, move_number)
         game_data.append((reshape_pyspiel_state(state, shape, alphazero_mcts.device), probability_visits))
         state.apply_action(action)
         move_number += 1
 
-    print(state, '\n~~~~~~~~~~~~~~~')
+    # print(state, '\n~~~~~~~~~~~~~~~')
     rewards = state.returns() 
     return [(state, probability_visits, torch.tensor([rewards[i % 2]], dtype=torch.float, device=alphazero_mcts.device)) for i, (state, probability_visits) in enumerate(game_data)]
 
@@ -200,8 +202,9 @@ def train_alphazero(num_games: int, epochs: int):
 
     try:
         alphazero_mcts = AlphaZero()
-        nn = NeuralNetwork().load("./models/nn").to(alphazero_mcts.device)
-        optimizer = optim.Adam(nn.parameters(), lr=0.001, weight_decay=1e-4)  # Weight decay is L2 regularization
+        nn = NeuralNetwork().to(alphazero_mcts.device)
+        # nn = NeuralNetwork().load("./models/alphazero_nn").to(alphazero_mcts.device)
+        optimizer = optim.Adam(nn.parameters(), lr=0.0001, weight_decay=1e-4)  # Weight decay is L2 regularization
 
         mse_loss_fn = MSELoss()
         cross_entropy_loss = CrossEntropyLoss() # https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html
@@ -209,13 +212,15 @@ def train_alphazero(num_games: int, epochs: int):
         training_data: list[tuple[torch.Tensor, torch.Tensor, torch.Tensor]] = []
 
         # Generate training data
-        for _ in range(num_games):
+        for i in range(num_games):
             new_training_data = play_alphazero_game(alphazero_mcts, nn)
-            print(f'Game {_ + 1} finished')
+            if (i + 1) % 50 == 0:
+                print(f'Game {i + 1} finished')
             training_data.extend(new_training_data)
 
         for epoch in range(epochs):
-            
+            policy_loss_tot = 0
+            value_loss_tot = 0
             total_loss = 0
             
             for state_tensor, target_policy, target_value in training_data:
@@ -236,23 +241,28 @@ def train_alphazero(num_games: int, epochs: int):
                 # Calculate loss
                 value_loss = mse_loss_fn(value_pred, target_value)
                 policy_loss = cross_entropy_loss(policy_pred, target_policy)
+                loss = policy_loss + value_loss
                 
-                loss = value_loss + policy_loss
                 
                 # Backward pass and optimize
                 loss.backward()
                 optimizer.step()
-
+                policy_loss_tot += policy_loss.item() # Keep track of loss
+                value_loss_tot += value_loss.item() # Keep track of loss
                 total_loss += loss.item() # Keep track of loss
+                if (epoch) == 999:
+                    print(f'State tensor, {state_tensor}')
+                    print(f'Target policy, {target_policy}')
+                    print(f'Target value, {target_value}')
 
-            print(f'Epoch {epoch+1}, Total Loss: {total_loss}')
+            print(f'Epoch {epoch+1}, Total Loss: {total_loss / len(training_data)}, Policy Loss: {policy_loss_tot / len(training_data)}, Value Loss: {value_loss_tot / len(training_data)}')
         
         
-        nn.save("./models/nn")
+        nn.save("./models/test_nn")
         print("Model saved!")
     
     except KeyboardInterrupt:
-        nn.save("./models/nn")
+        nn.save("./models/test_nn")
         print("\nModel saved!")
         raise KeyboardInterrupt
 

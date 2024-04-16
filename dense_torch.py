@@ -112,6 +112,8 @@ def batch_training():
     test_output = forward(torch.tensor([[1.0]]))
     print(f'Output after training: {test_output.item()}')
 
+
+simple_training()
 """
 # Example of batch training with gradient accumulation, using optimizer
 
@@ -140,27 +142,27 @@ import torch.nn as nn
 from icecream import ic
 
 # Example of target with class indices
-loss = nn.CrossEntropyLoss()
-input = torch.randn(3, 5, requires_grad=True)
-target = torch.empty(3, dtype=torch.long).random_(5)
-output = loss(input, target)
-output.backward()
+# loss = nn.CrossEntropyLoss()
+# input = torch.randn(3, 5, requires_grad=True)
+# target = torch.empty(3, dtype=torch.long).random_(5)
+# output = loss(input, target)
+# output.backward()
 
-# Example of target with class probabilities
-input = torch.randn(3, 5, requires_grad=True)
-target = torch.randn(3, 5).softmax(dim=1)
-ic(input)
-for _ in range(10000):
-    output = loss(input, target)
-    output.backward()
-    with torch.no_grad():
-        input -= 0.1 * input.grad
-        input.grad.zero_()
-    print(f'Loss: {output.item()}')
-    ic(input)
+# # Example of target with class probabilities
+# input = torch.randn(3, 5, requires_grad=True)
+# target = torch.randn(3, 5).softmax(dim=1)
+# ic(input)
+# for _ in range(10000):
+#     output = loss(input, target)
+#     output.backward()
+#     with torch.no_grad():
+#         input -= 0.1 * input.grad
+#         input.grad.zero_()
+#     print(f'Loss: {output.item()}')
+#     ic(input)
 
-ic(input)
-ic(target)
-ic(input.softmax(dim=1))
+# ic(input)
+# ic(target)
+# ic(input.softmax(dim=1))
 
 

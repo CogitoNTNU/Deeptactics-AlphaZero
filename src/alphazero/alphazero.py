@@ -86,9 +86,8 @@ class AlphaZero:
         """
         root_node = Node(parent=None, state=state, action=None, policy_value=None)  # Initialize root node.
         policy, value = self.evaluate(root_node, neural_network)  # Evaluate the root node
-        normalize_policy_values(policy, root_node.state.legal_actions())  # Normalize the policy values
-
-        print("Root node policy values: ", policy)
+        # normalize_policy_values(policy, root_node.state.legal_actions())  # Normalize the policy values
+        print("Root node value: ", value)
 
         for _ in range(num_simulations):  # Do the selection, expansion & evaluation, backpropagation
 
@@ -102,13 +101,17 @@ class AlphaZero:
                 player = (node.parent.state.current_player())  # Here state is terminal, so we get the winning player
                 winner = node.state.returns()[player]
             self.backpropagate(node, winner)
+        
+        for child in root_node.children:
+            print(f'Action: {child.action}, Visits: {child.visits}, Value: {child.value}, Policy Value: {child.policy_value}')
+
         return max(root_node.children, key=lambda node: node.visits).action # The best action is the one with the most visits
         
         
 def play_alphazero():
 
     alphazero_mcts = AlphaZero()
-    nn = NeuralNetwork().load("./models/nn").to(alphazero_mcts.device)
+    nn = NeuralNetwork().load("./models/alphazero_nn").to(alphazero_mcts.device)
     state = alphazero_mcts.game.new_initial_state()
     
     while (not state.is_terminal()):

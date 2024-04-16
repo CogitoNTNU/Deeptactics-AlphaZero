@@ -19,12 +19,13 @@ class NeuralNetwork(nn.Module):
         self.initial = nn.Sequential(
             nn.Conv2d(
                 self.input_dimension,
-                self.hidden_dimension,
+                out_channels=self.hidden_dimension,
                 kernel_size=3,
                 stride=1,
                 padding=1,
             ),  # Convolution matrix
-            nn.BatchNorm2d(self.hidden_dimension),  # Batch normalization
+            nn.LayerNorm([self.hidden_dimension, 3, 3]),  # Layer normalization
+            # nn.BatchNorm2d(self.hidden_dimension),  # Batch normalization
             nn.ReLU(),  # Activation function
         )
 
@@ -32,36 +33,40 @@ class NeuralNetwork(nn.Module):
         self.block = nn.Sequential(
             nn.Conv2d(
                 self.hidden_dimension,
-                self.hidden_dimension,
+                out_channels=self.hidden_dimension,
                 kernel_size=3,
                 stride=1,
                 padding=1,
             ),  # Convolution matrix
-            nn.BatchNorm2d(self.hidden_dimension),  # Batch normalization
+            nn.LayerNorm([self.hidden_dimension, 3, 3]),  # Layer normalization
+            # nn.BatchNorm2d(self.hidden_dimension),  # Batch normalization
             nn.ReLU(),  # Activation function
             nn.Conv2d(
                 self.hidden_dimension,
-                self.hidden_dimension,
+                out_channels=self.hidden_dimension,
                 kernel_size=3,
                 stride=1,
                 padding=1,
             ),  # Convolution matrix
-            nn.BatchNorm2d(self.hidden_dimension),  # Batch normalization
+            nn.LayerNorm([self.hidden_dimension, 3, 3]),  # Layer normalization
+            # nn.BatchNorm2d(self.hidden_dimension),  # Batch normalization
         )
 
         self.policy = nn.Sequential(
-            nn.Conv2d(self.hidden_dimension, 2, kernel_size=1, stride=1),
-            nn.BatchNorm2d(2),
+            nn.Conv2d(self.hidden_dimension, out_channels=2, kernel_size=1, stride=1),
+            # nn.BatchNorm2d(2),
             nn.ReLU(),  # shape (1, 2, 3, 3)
             nn.Flatten(),  # shape (1)
+            nn.LayerNorm(2 * game_size), # No point, because few dimensions
             nn.Linear(2 * game_size, legal_moves),
         )
 
         self.value = nn.Sequential(
-            nn.Conv2d(self.hidden_dimension, 1, kernel_size=1, stride=1),
-            nn.BatchNorm2d(1),
+            nn.Conv2d(self.hidden_dimension, out_channels=1, kernel_size=1, stride=1),
+            
             nn.ReLU(),
             nn.Flatten(),
+            nn.LayerNorm(1 * game_size),
             nn.Linear(1 * game_size, 256),
             nn.ReLU(),
             nn.Linear(256, 1),
