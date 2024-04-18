@@ -11,7 +11,7 @@ class AlphaZero:
     def __init__(self, game_name: str = "tic_tac_toe"):
         self.game = pyspiel.load_game(game_name)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.c = torch.tensor(4.0, dtype=torch.float, device=self.device) # Exploration constant
+        self.c = torch.tensor(4.0, dtype=torch.float) # Exploration constant
 
     # @profile
     def vectorized_select(self, node: Node) -> Node: # OPTIMIZATION for GPU, great speedup is expected when number of children is large.
@@ -24,10 +24,10 @@ class AlphaZero:
 
         while node.has_children():
             
-            visits = torch.tensor([child.visits for child in node.children], device=self.device, dtype=torch.float)
-            values = torch.tensor([child.value for child in node.children], device=self.device, dtype=torch.float)
-            policy_values = torch.tensor([child.policy_value for child in node.children], device=self.device, dtype=torch.float)
-            parent_visits_sqrt = torch.tensor(node.visits, device=self.device, dtype=torch.float).sqrt_()
+            visits = torch.tensor([child.visits for child in node.children], dtype=torch.float)
+            values = torch.tensor([child.value for child in node.children], dtype=torch.float)
+            policy_values = torch.tensor([child.policy_value for child in node.children], dtype=torch.float)
+            parent_visits_sqrt = torch.tensor(node.visits, dtype=torch.float).sqrt_()
 
             # Compute PUCT for all children in a vectorized manner
             Q = torch.where(visits > 0, values / visits, torch.zeros_like(visits))
@@ -109,7 +109,7 @@ class AlphaZero:
         
         
 def play_alphazero(model_path: str, num_simulations=800):
-
+    
     alphazero_mcts = AlphaZero()
     nn = NeuralNetwork().load(model_path).to(alphazero_mcts.device)
     state = alphazero_mcts.game.new_initial_state()

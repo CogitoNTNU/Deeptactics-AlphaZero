@@ -63,11 +63,15 @@ def train_alphazero_model(num_games: int, num_simulations: int, epochs: int, bat
             
             for i in range(0, num_samples, batch_size):
                 
+                # Extract batch
                 batch_state_tensor = state_tensors[indices[i : i + batch_size]]
                 batch_probability_tensor = probability_tensors[indices[i : i + batch_size]]
                 batch_reward_tensor = reward_tensors[indices[i : i + batch_size]]
                 
-                optimizer.zero_grad()  # Reset gradients
+                # Reset gradients
+                optimizer.zero_grad()
+
+                # Forward pass
                 policy_pred, value_pred = nn.forward(batch_state_tensor)
 
                 # Calculate loss
@@ -79,11 +83,15 @@ def train_alphazero_model(num_games: int, num_simulations: int, epochs: int, bat
                 loss.backward()
                 optimizer.step()
 
+                # Track losses
                 policy_loss_tot += policy_loss.item(); value_loss_tot += value_loss.item(); total_loss += loss.item()
                 
 
             print(
-                f"Epoch {epoch+1}, Total Loss: {total_loss / num_steps}, Policy Loss: {policy_loss_tot / num_steps}, Value Loss: {value_loss_tot / num_steps}"
+                f"Epoch {epoch+1}, (Per sample) Total Loss: {total_loss}, Policy Loss: {policy_loss_tot}, Value Loss: {value_loss_tot}"
+            )
+            print(
+                f"Epoch {epoch+1}\n(Per batch) Total Loss: {total_loss / num_steps}, Policy Loss: {policy_loss_tot / num_steps}, Value Loss: {value_loss_tot / num_steps}\n(Per sample) Total Loss: {total_loss / num_samples}, Policy Loss: {policy_loss_tot / num_samples}, Value Loss: {value_loss_tot / num_samples}"
             )
 
         nn.save(model_path)

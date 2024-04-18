@@ -5,11 +5,13 @@ and generates training data by playing games with the alphazero agent.
 
 
 import torch
+import torch.multiprocessing as mp
+import time
+from tqdm import tqdm
 
 from src.alphazero.alphazero_training_agent import AlphaZero
 from src.neuralnet.neural_network import NeuralNetwork
 from src.utils.nn_utils import reshape_pyspiel_state
-
 
 def play_alphazero_game(
     alphazero_mcts: AlphaZero, nn: NeuralNetwork, num_simulations: int
@@ -51,6 +53,7 @@ def play_alphazero_game(
         for i, (state, probability_visits) in enumerate(game_data)
     ]
 
+
 def generate_training_data(nn: NeuralNetwork, num_games: int, num_simulations: int = 100) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Takes in a neural network, and generates training data by making the neural network play games against itself.
@@ -74,12 +77,23 @@ def generate_training_data(nn: NeuralNetwork, num_games: int, num_simulations: i
     alphazero_mcts = AlphaZero()
     nn.to(alphazero_mcts.device)
     training_data = []
+    
+    # print(f"Generating training data with {mp.cpu_count()} threads...")
 
-    for i in range(num_games):
-        new_training_data = play_alphazero_game(alphazero_mcts, nn, num_simulations)
-        if (i + 1) % 50 == 0:
-            print(f"Game {i + 1} finished")
-        training_data.extend(new_training_data)
+    start_time = time.time()
+    with mp.Pool(24) as pool:
+        result_list = list(tqdm(pool.starmap(play_alphazero_game, [(alphazero_mcts, nn, num_simulations) for _ in range(num_games)])))
+    end_time = time.time()
+    print(f"Generated training data with {mp.cpu_count()} threads in {end_time - start_time:.2f} seconds.")
+    
+    start_time = time.time()
+    with mp.Pool(1) as pool:
+        result_list = list(tqdm(pool.starmap(play_alphazero_game, [(alphazero_mcts, nn, num_simulations) for _ in range(num_games)])))
+    end_time = time.time()
+    print(f"Generated training data with 1 thread in {end_time - start_time:.2f} seconds.")
+    
+    for i in range(len(result_list)):
+            training_data.extend(result_list[i])
 
     num_actions = alphazero_mcts.game.num_distinct_actions()
     states = [item[0] for item in training_data]
