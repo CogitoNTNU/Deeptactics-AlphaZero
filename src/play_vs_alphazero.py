@@ -1,5 +1,5 @@
 from src.neuralnet.neural_network import NeuralNetwork
-from src.alphazero.alphazero import AlphaZero
+from src.alphazero.alphazero_play_agent import AlphaZero
 
 def player(state):
     action = None

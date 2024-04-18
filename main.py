@@ -1,14 +1,19 @@
 import pyspiel
 import torch
 
-from src.alphazero.alphazero import play_alphazero
-from src.alphazero.alphazero_training import AlphaZero, train_alphazero
-from src.neuralnet.neural_network import NeuralNetwork
+from src.alphazero.alphazero_play_agent import play_alphazero
+from src.alphazero.alphazero_train_model import train_alphazero_model
 
 # play_alphazero()
 
 for i in range(1):
-     train_alphazero(num_games=1, epochs=1000)
+     train_alphazero_model(
+          num_games=1,
+          num_simulations=100,
+          epochs=1000,
+          batch_size=10,
+          model_path=None
+     )
      print(f'Training session {i} finished!')
 
 # Neural network gives 5 outputs:

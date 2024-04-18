@@ -18,7 +18,7 @@ import torch
 
 from src.alphazero.node import Node
 from src.neuralnet.neural_network import NeuralNetwork
-from src.utils.nn_utils import forward_state, reshape_pyspiel_state
+from src.utils.nn_utils import forward_state
 from src.utils.random_utils import generate_dirichlet_noise, generate_probabilty_target
 from src.utils.tensor_utils import (normalize_policy_values,
                                     normalize_policy_values_with_noise)
