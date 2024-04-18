@@ -40,30 +40,19 @@ def train_alphazero_model(num_games: int, num_simulations: int, epochs: int, bat
         model_path = "./models/test_nn"
     
     optimizer = optim.Adam(
-        nn.parameters(), lr=0.0001, weight_decay=1e-4
+        nn.parameters(), lr=1e-4, weight_decay=1e-4
     )  # Weight decay is L2 regularization
     
-    training_data: list[tuple[torch.Tensor, torch.Tensor, torch.Tensor]] = generate_training_data(
+    state_tensors, probability_tensors, reward_tensors = generate_training_data(
         nn, num_games, num_simulations
     )
-    num_samples = len(training_data)
     
-
-    ## It might be wise to perhaps make the generate_training_data function
-    ## return the tensors directly, instead of a list of tuples.
-
-    num_actions = len(training_data[0][1])
-    states = [item[0] for item in training_data]
-    probabilities = [item[1] for item in training_data]
-    rewards = [item[2] for item in training_data]
-
-    state_tensors = torch.cat(states, dim=0)
-    probability_tensors = torch.cat(probabilities, dim=0).reshape(-1, num_actions)
-    reward_tensors = torch.cat(rewards, dim=0).reshape(-1, 1)
-
-    ### Above code might be sent to generate_training_data function, to return the tensors directly.
-
-    try:
+    num_samples = state_tensors.size(0)
+    
+    last_batch_size = num_samples % batch_size
+    num_steps = num_samples // batch_size + (1 if last_batch_size > 0 else 0)
+    
+    try:    
 
         for epoch in range(epochs):
             policy_loss_tot = 0
@@ -94,7 +83,7 @@ def train_alphazero_model(num_games: int, num_simulations: int, epochs: int, bat
                 
 
             print(
-                f"Epoch {epoch+1}, Total Loss: {total_loss / len(training_data)}, Policy Loss: {policy_loss_tot / len(training_data)}, Value Loss: {value_loss_tot / len(training_data)}"
+                f"Epoch {epoch+1}, Total Loss: {total_loss / num_steps}, Policy Loss: {policy_loss_tot / num_steps}, Value Loss: {value_loss_tot / num_steps}"
             )
 
         nn.save(model_path)

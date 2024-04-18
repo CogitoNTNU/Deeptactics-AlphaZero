@@ -51,7 +51,7 @@ def play_alphazero_game(
         for i, (state, probability_visits) in enumerate(game_data)
     ]
 
-def generate_training_data(nn: NeuralNetwork, num_games: int, num_simulations: int = 100):
+def generate_training_data(nn: NeuralNetwork, num_games: int, num_simulations: int = 100) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Takes in a neural network, and generates training data by making the neural network play games against itself.
     The amount of training data is equal to:
@@ -65,10 +65,9 @@ def generate_training_data(nn: NeuralNetwork, num_games: int, num_simulations: i
     A high number of simulations leads to better training data, but increases the time it takes to generate the data.
 
     Returns:
-    - list[tuple[torch.Tensor, torch.Tensor, torch.Tensor]] - The training data
+    - tuple[torch.Tensor, torch.Tensor, torch.Tensor] - The training data
 
-    The returned list is on the form:
-    [(state, probability_target, reward), (state, probability_target, reward), ...]
+    Instead of returning a list of tuples, we are just returning three huge tensors.
 
     """
 
@@ -82,6 +81,15 @@ def generate_training_data(nn: NeuralNetwork, num_games: int, num_simulations: i
             print(f"Game {i + 1} finished")
         training_data.extend(new_training_data)
 
-    return training_data
+    num_actions = alphazero_mcts.game.num_distinct_actions()
+    states = [item[0] for item in training_data]
+    probabilities = [item[1] for item in training_data]
+    rewards = [item[2] for item in training_data]
+
+    state_tensors = torch.cat(states, dim=0)
+    probability_tensors = torch.cat(probabilities, dim=0).reshape(-1, num_actions)
+    reward_tensors = torch.cat(rewards, dim=0).reshape(-1, 1)
+
+    return state_tensors, probability_tensors, reward_tensors
 
 
