@@ -108,14 +108,14 @@ class AlphaZero:
         return max(root_node.children, key=lambda node: node.visits).action # The best action is the one with the most visits
         
         
-def play_alphazero():
+def play_alphazero(model_path: str, num_simulations=800):
 
     alphazero_mcts = AlphaZero()
-    nn = NeuralNetwork().load("./models/alphazero_nn").to(alphazero_mcts.device)
+    nn = NeuralNetwork().load(model_path).to(alphazero_mcts.device)
     state = alphazero_mcts.game.new_initial_state()
     
     while (not state.is_terminal()):
-        action = alphazero_mcts.run_simulation(state, nn)
+        action = alphazero_mcts.run_simulation(state, nn, num_simulations)
         print("best action\t", action, "\n")
         state.apply_action(action)
         print(state)
