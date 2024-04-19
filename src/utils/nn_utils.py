@@ -16,7 +16,8 @@ def forward_state(state: torch.Tensor, shape: list[int], device: torch.device, n
     """
 
     state_tensor = torch.reshape(torch.tensor(state.observation_tensor(), device=device), shape).unsqueeze(0) ## Reshape the state tensor to the correct shape and add a batch dimension
-    policy, value = neural_network.forward(state_tensor) ## Forward propagate the state tensor through the neural network
+    with torch.no_grad(): ## Disable gradient calculation
+        policy, value = neural_network.forward(state_tensor) ## Forward propagate the state tensor through the neural network
     del state_tensor ## Delete the state tensor to free up memory
     return policy.squeeze(0), value.squeeze(0) ## Remove the batch dimension from the output tensors and return them
 
