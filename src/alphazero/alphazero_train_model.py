@@ -49,9 +49,6 @@ def train_alphazero_model(num_games: int, num_simulations: int, epochs: int, bat
     
     num_samples = state_tensors.size(0)
     
-    last_batch_size = num_samples % batch_size
-    num_steps = num_samples // batch_size + (1 if last_batch_size > 0 else 0)
-    
     try:    
 
         for epoch in range(epochs):
@@ -86,16 +83,12 @@ def train_alphazero_model(num_games: int, num_simulations: int, epochs: int, bat
                 # Track losses
                 policy_loss_tot += policy_loss.item(); value_loss_tot += value_loss.item(); total_loss += loss.item()
                 
-
             print(
-                f"Epoch {epoch+1}, (Per sample) Total Loss: {total_loss}, Policy Loss: {policy_loss_tot}, Value Loss: {value_loss_tot}"
-            )
-            print(
-                f"Epoch {epoch+1}\n(Per batch) Total Loss: {total_loss / num_steps}, Policy Loss: {policy_loss_tot / num_steps}, Value Loss: {value_loss_tot / num_steps}\n(Per sample) Total Loss: {total_loss / num_samples}, Policy Loss: {policy_loss_tot / num_samples}, Value Loss: {value_loss_tot / num_samples}"
+                f"Epoch {epoch+1}\n(Per sample) Total Loss: {total_loss / num_samples}, Policy Loss: {policy_loss_tot / num_samples}, Value Loss: {value_loss_tot / num_samples}"
             )
 
         nn.save(model_path)
-        print("\nModel saved!")
+        print(f"\nEpoch {epoch + 1}: Model saved!")
 
     except KeyboardInterrupt:
         nn.save(model_path)

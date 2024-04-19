@@ -15,6 +15,7 @@ It returns the best action to take, and the probability distribution of the root
 
 import pyspiel
 import torch
+import os
 
 from src.alphazero.node import Node
 from src.neuralnet.neural_network import NeuralNetwork
@@ -193,39 +194,42 @@ class AlphaZero(torch.nn.Module):
         Selection, expansion & evaluation, backpropagation.
         Returns an action to be played.
         """
+        try: 
+            root_node = Node(
+                parent=None, state=state, action=None, policy_value=None
+            )  # Initialize root node, and do dirichlet expand to get some exploration
+            policy, value = self.evaluate(root_node, neural_network)
+            self.dirichlet_expand(root_node, policy)
 
-        root_node = Node(
-            parent=None, state=state, action=None, policy_value=None
-        )  # Initialize root node, and do dirichlet expand to get some exploration
-        policy, value = self.evaluate(root_node, neural_network)
-        self.dirichlet_expand(root_node, policy)
+            for _ in range(
+                num_simulations - 1
+            ):  # Do the selection, expansion & evaluation, backpropagation
 
-        for _ in range(
-            num_simulations - 1
-        ):  # Do the selection, expansion & evaluation, backpropagation
+                node = self.vectorized_select(root_node)  # Get desired child node
+                if not node.state.is_terminal() and not node.has_children():
+                    policy, value = self.evaluate(
+                        node, neural_network
+                    )  # Evaluate the node, using the neural network
+                    self.expand(node, policy)  # creates all its children
+                    winner = value
+                else:
+                    player = (
+                        node.parent.state.current_player()
+                    )  # Here state is terminal, so we get the winning player
+                    winner = node.state.returns()[player]
+                self.backpropagate(node, winner)
 
-            node = self.vectorized_select(root_node)  # Get desired child node
-            if not node.state.is_terminal() and not node.has_children():
-                policy, value = self.evaluate(
-                    node, neural_network
-                )  # Evaluate the node, using the neural network
-                self.expand(node, policy)  # creates all its children
-                winner = value
-            else:
-                player = (
-                    node.parent.state.current_player()
-                )  # Here state is terminal, so we get the winning player
-                winner = node.state.returns()[player]
-            self.backpropagate(node, winner)
+            normalized_root_node_children_visits = generate_probabilty_target(root_node, self.num_actions, self.device)
 
-        normalized_root_node_children_visits = generate_probabilty_target(root_node, self.num_actions, self.device)
-
-        # if move_number > self.temperature_moves:
-        return (
-            max(root_node.children, key=lambda node: node.visits).action,
-            normalized_root_node_children_visits,
-        )  # The best action is the one with the most visits
-        # else:
-        #     probabilities = torch.softmax(normalized_root_node_children_visits, dim=0) # Temperature-like exploration
-        #     return root_node.children[torch.multinomial(probabilities, num_samples=1).item()].action, normalized_root_node_children_visits
-
+            # if move_number > self.temperature_moves:
+            return (
+                max(root_node.children, key=lambda node: node.visits).action,
+                normalized_root_node_children_visits,
+            )  # The best action is the one with the most visits
+            # else:
+            #     probabilities = torch.softmax(normalized_root_node_children_visits, dim=0) # Temperature-like exploration
+            #     return root_node.children[torch.multinomial(probabilities, num_samples=1).item()].action, normalized_root_node_children_visits
+        
+        except KeyboardInterrupt:
+            print(f'Simulation (run_simulation) interrupted! PID: {os.getpid()}')
+            raise

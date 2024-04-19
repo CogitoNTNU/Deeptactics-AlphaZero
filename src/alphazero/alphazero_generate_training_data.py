@@ -42,7 +42,7 @@ def play_alphazero_game(
 
     # print(state, '\n~~~~~~~~~~~~~~~')
     rewards = state.returns()
-    return [
+    training_data = [
         (
             state,
             probability_visits,
@@ -52,6 +52,8 @@ def play_alphazero_game(
         )
         for i, (state, probability_visits) in enumerate(game_data)
     ]
+
+    return training_data
 
 
 def generate_training_data(nn: NeuralNetwork, num_games: int, num_simulations: int = 100) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -73,37 +75,69 @@ def generate_training_data(nn: NeuralNetwork, num_games: int, num_simulations: i
     Instead of returning a list of tuples, we are just returning three huge tensors.
 
     """
-
     alphazero_mcts = AlphaZero()
     nn.to(alphazero_mcts.device)
     training_data = []
-    
-    # print(f"Generating training data with {mp.cpu_count()} threads...")
 
-    start_time = time.time()
-    with mp.Pool(24) as pool:
-        result_list = list(tqdm(pool.starmap(play_alphazero_game, [(alphazero_mcts, nn, num_simulations) for _ in range(num_games)])))
-    end_time = time.time()
-    print(f"Generated training data with {mp.cpu_count()} threads in {end_time - start_time:.2f} seconds.")
-    
-    start_time = time.time()
-    with mp.Pool(1) as pool:
-        result_list = list(tqdm(pool.starmap(play_alphazero_game, [(alphazero_mcts, nn, num_simulations) for _ in range(num_games)])))
-    end_time = time.time()
-    print(f"Generated training data with 1 thread in {end_time - start_time:.2f} seconds.")
-    
-    for i in range(len(result_list)):
+    try:
+        print(f"Generating training data with {mp.cpu_count()} threads...")
+        start_time = time.time()
+        with mp.Pool(mp.cpu_count()) as pool:
+            result_list = list(tqdm(pool.starmap(play_alphazero_game, [(alphazero_mcts, nn, num_simulations) for _ in range(num_games)])))
+        end_time = time.time()
+        print(f"Generated training data with {mp.cpu_count()} threads in {end_time - start_time:.2f} seconds.")
+
+        # Process results only if data generation was successful
+        for i in range(len(result_list)):
             training_data.extend(result_list[i])
 
-    num_actions = alphazero_mcts.game.num_distinct_actions()
-    states = [item[0] for item in training_data]
-    probabilities = [item[1] for item in training_data]
-    rewards = [item[2] for item in training_data]
+        num_actions = alphazero_mcts.game.num_distinct_actions()
+        states = [item[0] for item in training_data]
+        probabilities = [item[1] for item in training_data]
+        rewards = [item[2] for item in training_data]
 
-    state_tensors = torch.cat(states, dim=0)
-    probability_tensors = torch.cat(probabilities, dim=0).reshape(-1, num_actions)
-    reward_tensors = torch.cat(rewards, dim=0).reshape(-1, 1)
+        state_tensors = torch.cat(states, dim=0)
+        probability_tensors = torch.cat(probabilities, dim=0).reshape(-1, num_actions)
+        reward_tensors = torch.cat(rewards, dim=0).reshape(-1, 1)
 
-    return state_tensors, probability_tensors, reward_tensors
+        return state_tensors, probability_tensors, reward_tensors
+
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt: Terminating training data generation...")
+        raise
+    # pool = None # Initialize pool to None, so we can terminate it if KeyboardInterrupt is raised.
+    # alphazero_mcts = AlphaZero()
+    # nn.to(alphazero_mcts.device)
+    # training_data = []
+
+    # try:
+    #     print(f"Generating training data with {mp.cpu_count()} threads...")
+    #     start_time = time.time()
+    #     pool = mp.Pool(mp.cpu_count())
+    #     result_list = list(tqdm(pool.starmap(play_alphazero_game, [(alphazero_mcts, nn, num_simulations) for _ in range(num_games)])))
+    #     end_time = time.time()
+    #     print(f"Generated training data with {mp.cpu_count()} threads in {end_time - start_time:.2f} seconds.")
+        
+    # except KeyboardInterrupt:
+    #     print("KeyboardInterrupt: Terminating training data generation...")
+    #     if pool is not None:
+    #         pool.terminate() # Terminates all processes in the pool.
+    #         pool.join() # Waits for all processes to finish.
+    #         pool.close()
+    #     raise # Reraise the KeyboardInterrupt, enables parent process to do its cleanup-process as well.
+    
+    # for i in range(len(result_list)):
+    #         training_data.extend(result_list[i])
+
+    # num_actions = alphazero_mcts.game.num_distinct_actions()
+    # states = [item[0] for item in training_data]
+    # probabilities = [item[1] for item in training_data]
+    # rewards = [item[2] for item in training_data]
+
+    # state_tensors = torch.cat(states, dim=0)
+    # probability_tensors = torch.cat(probabilities, dim=0).reshape(-1, num_actions)
+    # reward_tensors = torch.cat(rewards, dim=0).reshape(-1, 1)
+
+    # return state_tensors, probability_tensors, reward_tensors
 
 
