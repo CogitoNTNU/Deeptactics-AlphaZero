@@ -32,7 +32,9 @@ def play_game(player1, player2, state, alphazero: AlphaZero, nn: NeuralNetwork):
         if state.is_terminal():
             break
         player2(state, alphazero, nn)
-
+        if state.is_terminal():
+            print('~~~~~~~~~~~~~~~ PLAYER 1 ~~~~~~~~~~~~~~~~')
+            print(state)
 
 
 def main(game_name: str, nn: NeuralNetwork):
