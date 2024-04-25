@@ -13,45 +13,45 @@ The main method in this file is run_simulation, which simulates a game using the
 It returns the best action to take, and the probability distribution of the root node's children visits.
 """
 
+import os
+
 import pyspiel
 import torch
-import os
 
 from src.alphazero.node import Node
 from src.neuralnet.neural_network import NeuralNetwork
 from src.utils.nn_utils import forward_state
-from src.utils.random_utils import generate_dirichlet_noise, generate_probabilty_target
+from src.utils.random_utils import (generate_dirichlet_noise,
+                                    generate_probabilty_target)
 from src.utils.tensor_utils import (normalize_policy_values,
                                     normalize_policy_values_with_noise)
 
 
 class AlphaZero(torch.nn.Module):
 
-    def __init__(self, game_name: str = "tic_tac_toe"):
+    def __init__(self, c: float = 4.0, alpha: float = 0.3, epsilon: float = 0.75, temperature_moves: int = 30, game_name: str = "tic_tac_toe"):
         super(AlphaZero, self).__init__()
         self.game = pyspiel.load_game(game_name)
         self.num_actions = self.game.num_distinct_actions()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
-        self.c = torch.tensor(
-            4.0, dtype=torch.float
-        )  # Exploration constant
+        self.c = torch.tensor(c, dtype=torch.float)  # Exploration constant
         """
         An exploration constant, used when calculating PUCT-values.
         """
 
-        self.a: float = 0.3
+        self.a: float = alpha
         """
         Alpha-value, a parameter in the Dirichlet-distribution.
         """
 
-        self.e: float = 0.75
+        self.e: float = epsilon
         """
         Epsilon-value, determines how many percent of ... is determined by PUCT,
         and how much is determined by Dirichlet-distribution.
         """
 
-        self.temperature_moves: int = 30
+        self.temperature_moves: int = temperature_moves
         """
         Up to a certain number of moves have been played, the move played is taken from a
         probability distribution based on the most visited states.
@@ -59,11 +59,7 @@ class AlphaZero(torch.nn.Module):
         """
 
     # @profile
-    def vectorized_select(
-        self, node: Node
-    ) -> (
-        Node
-    ):  # OPTIMIZATION for GPU, great speedup is expected when number of children is large.
+    def vectorized_select(self, node: Node) -> (Node):  # OPTIMIZATION for GPU, great speedup is expected when number of children is large.
         """
         Select stage of MCTS.
         Go through the game tree, layer by layer.
@@ -221,14 +217,16 @@ class AlphaZero(torch.nn.Module):
 
             normalized_root_node_children_visits = generate_probabilty_target(root_node, self.num_actions, self.device)
 
-            # if move_number > self.temperature_moves:
-            return (
-                max(root_node.children, key=lambda node: node.visits).action,
-                normalized_root_node_children_visits,
-            )  # The best action is the one with the most visits
-            # else:
-            #     probabilities = torch.softmax(normalized_root_node_children_visits, dim=0) # Temperature-like exploration
-            #     return root_node.children[torch.multinomial(probabilities, num_samples=1).item()].action, normalized_root_node_children_visits
+            if move_number > self.temperature_moves:
+                return (
+                    max(root_node.children, key=lambda node: node.visits).action,
+                    normalized_root_node_children_visits
+                )  # The best action is the one with the most visits
+            else:
+                masked_values = torch.where(normalized_root_node_children_visits > 0, normalized_root_node_children_visits, torch.tensor(float('-inf'), device=self.device))
+                probabilities = torch.softmax(masked_values, dim=0) # Temperature-like exploration
+                action, probability_target = torch.multinomial(probabilities, num_samples=1).item(), normalized_root_node_children_visits
+                return action, probability_target
         
         except KeyboardInterrupt:
             print(f'Simulation (run_simulation) interrupted! PID: {os.getpid()}')
