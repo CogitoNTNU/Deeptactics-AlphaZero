@@ -1,5 +1,4 @@
 import os
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,10 +9,10 @@ class ResBlock(nn.Module):
         super().__init__()
         self.conv_block = nn.Sequential(
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
-            nn.BatchNorm2d(hidden_dim),
+            nn.LayerNorm([hidden_dim, 3, 3]),
             nn.ReLU(),
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
-            nn.BatchNorm2d(hidden_dim),
+            nn.LayerNorm([hidden_dim, 3, 3]),
         )
 
     def forward(self, x):
@@ -46,11 +45,8 @@ class NeuralNetwork(nn.Module):
                 padding=1,
             ),  # Convolution matrix
             nn.LayerNorm([self.hidden_dimension, 3, 3]),  # Layer normalization
-            # nn.BatchNorm2d(self.hidden_dimension),  # Batch normalization
             nn.ReLU(),  # Activation function
         )
-
-       
         
         self.residual_blocks = nn.ModuleList(
             [ResBlock(hidden_dimension) for _ in range(self.res_blocks)]
