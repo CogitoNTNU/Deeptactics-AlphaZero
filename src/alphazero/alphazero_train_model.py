@@ -12,7 +12,7 @@ from src.neuralnet.neural_network import NeuralNetwork
 from src.alphazero.alphazero_generate_training_data import generate_training_data
 
 
-def train_alphazero_model(num_games: int, num_simulations: int, epochs: int, batch_size: int = 1, model_path: str = None):
+def train_alphazero_model(alphazero: AlphaZero, nn: NeuralNetwork, nn_save_path: str, num_games: int, num_simulations: int, epochs: int, batch_size: int):
     """
     Parameters:
     - num_games: The number of games to play, and use for training.
@@ -31,20 +31,14 @@ def train_alphazero_model(num_games: int, num_simulations: int, epochs: int, bat
     Batch size is the number of training samples to use for gradient calculation.
     """
 
-    alphazero_mcts = AlphaZero()
-    
-    if model_path:
-        nn = NeuralNetwork().load(model_path).to(alphazero_mcts.device)
-    else:
-        nn = NeuralNetwork().to(alphazero_mcts.device)
-        model_path = "./models/test_nn"
+    nn.to(alphazero.device)
     
     optimizer = optim.Adam(
         nn.parameters(), lr=1e-4, weight_decay=1e-4
     )  # Weight decay is L2 regularization
     
     state_tensors, probability_tensors, reward_tensors = generate_training_data(
-        nn, num_games, num_simulations
+        alphazero, nn, num_games, num_simulations
     )
     
     num_samples = state_tensors.size(0)
@@ -87,10 +81,10 @@ def train_alphazero_model(num_games: int, num_simulations: int, epochs: int, bat
                 f"Epoch {epoch+1}\n(Per sample) Total Loss: {total_loss / num_samples}, Policy Loss: {policy_loss_tot / num_samples}, Value Loss: {value_loss_tot / num_samples}"
             )
 
-        nn.save(model_path)
+        nn.save(nn_save_path)
         print(f"\nEpoch {epoch + 1}: Model saved!")
 
     except KeyboardInterrupt:
-        nn.save(model_path)
+        nn.save(nn_save_path)
         print("\nModel saved!")
         raise KeyboardInterrupt

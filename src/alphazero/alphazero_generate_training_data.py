@@ -73,7 +73,7 @@ def play_alphazero_games(
     return training_data
     
 
-def generate_training_data(nn: NeuralNetwork, num_games: int, num_simulations: int = 100) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+def generate_training_data(alphazero: AlphaZero, nn: NeuralNetwork, num_games: int, num_simulations: int = 100) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Takes in a neural network, and generates training data by making the neural network play games against itself.
     The amount of training data is equal to:
@@ -92,13 +92,12 @@ def generate_training_data(nn: NeuralNetwork, num_games: int, num_simulations: i
     Instead of returning a list of tuples, we are just returning three huge tensors.
 
     """
-    alphazero_mcts = AlphaZero()
-    nn.to(alphazero_mcts.device)
+    
     training_data = []
 
     try:
         
-        multicore_args, thread_count = get_play_alphazero_games_arguments(alphazero_mcts, nn, num_games, num_simulations)
+        multicore_args, thread_count = get_play_alphazero_games_arguments(alphazero, nn, num_games, num_simulations)
     
         print(f"Generating training data with {thread_count} threads...")
         start_time = time.time()
@@ -111,7 +110,7 @@ def generate_training_data(nn: NeuralNetwork, num_games: int, num_simulations: i
         for i in range(len(result_list)):
             training_data.extend(result_list[i])
 
-        num_actions = alphazero_mcts.game.num_distinct_actions()
+        num_actions = alphazero.game.num_distinct_actions()
         states = [item[0] for item in training_data]
         probabilities = [item[1] for item in training_data]
         rewards = [item[2] for item in training_data]

@@ -35,8 +35,8 @@ def play_game(player1, player2, state, alphazero: AlphaZero, nn: NeuralNetwork):
 
 
 
-def main(model_path: str):
-    alphazero = AlphaZero()
-    nn = NeuralNetwork.load(model_path).to(alphazero.device)
+def main(game_name: str, nn: NeuralNetwork):
+    alphazero = AlphaZero(game_name=game_name)
+    nn.to(alphazero.device)
     state = alphazero.game.new_initial_state()
     play_game(player, ai, state, alphazero, nn)

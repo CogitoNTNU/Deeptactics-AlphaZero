@@ -2,7 +2,7 @@ import torch
 import pyspiel
 from torch.distributions.dirichlet import Dirichlet
 from icecream import ic
-from src.play_vs_alphazero import main
+from play.play_vs_alphazero import main
 import src.alphazero.alphazero_training_agent as az
 
 
@@ -77,3 +77,39 @@ stacked = torch.cat([vecz1, vecz2, vecz3, vecz4], dim=0)
 ic(stacked)
 
 
+"""
+for utfordring in range(3):
+    with konkrete_situasjoner and refleksjoner:
+        beskriv arbeidsprosess
+        beskriv hvordan arbeidsprosess påvirket produkt
+"""
+
+from scipy.stats import norm
+
+
+std_dev = 6
+probability = 1 - norm.cdf(std_dev)
+once_per = probability ** (-1)
+ic(probability)
+ic(once_per)
+print(torch.cuda.is_available())
+
+gog = [(1, 1, 1) for _ in range(0)]
+ic(gog)
+
+gog.extend([])
+ic(gog)
+
+gog += [(1, 1, 1) for _ in range(0)]
+ic(gog)
+
+
+game = pyspiel.load_game("connect_four")
+state = game.new_initial_state()
+shape = game.observation_tensor_shape()
+print(state.legal_actions())
+ic(game.observation_tensor_shape())
+state.apply_action(1)
+ic(state)
+state_tensor = torch.reshape(torch.tensor(state.observation_tensor(), device=device), shape).unsqueeze(0)
+ic(state_tensor)
