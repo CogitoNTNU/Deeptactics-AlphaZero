@@ -22,7 +22,11 @@ def ai(state, alphazero: AlphaZero, nn: NeuralNetwork):
     state.apply_action(action)
 
 
-def play_game(player1, player2, state, alphazero: AlphaZero, nn: NeuralNetwork):
+def play_game(player1, player2, state, alphazero: AlphaZero, nn: NeuralNetwork, first: bool):
+    
+    if not first:
+        player2(state, alphazero, nn)
+    
     while not state.is_terminal():
         print('~~~~~~~~~~~~~~~ PLAYER 1 ~~~~~~~~~~~~~~~~')
         print(state)
@@ -37,8 +41,8 @@ def play_game(player1, player2, state, alphazero: AlphaZero, nn: NeuralNetwork):
             print(state)
 
 
-def main(game_name: str, nn: NeuralNetwork):
+def main(game_name: str, nn: NeuralNetwork, first: bool):
     alphazero = AlphaZero(game_name=game_name)
     nn.to(alphazero.device)
     state = alphazero.game.new_initial_state()
-    play_game(player, ai, state, alphazero, nn)
+    play_game(player, ai, state, alphazero, nn, first)

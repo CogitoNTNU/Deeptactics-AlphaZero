@@ -3,9 +3,14 @@ from src.neuralnet.neural_network import NeuralNetwork
 from src.utils.multi_core_utils import get_play_alphazero_games_arguments
 import torch.multiprocessing as mp
 
+"""
+In these tests, we are assuming that the minimum amount of games to play
+per thread is 4. It takes time to set up the threads, so we want to make
+sure that we are playing enough games to make the overhead worth it.
+"""
+
 def test_argument_generation():
 
-    minimum_games_per_thread = 4
     alphazero = AlphaZero(game_name="tic_tac_toe")
     nn = NeuralNetwork().to(alphazero.device)
     num_simulations = 1000

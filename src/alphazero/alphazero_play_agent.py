@@ -21,11 +21,15 @@ class AlphaZero:
         Chooses the node with the highest UCB-score at each layer.
         Returns a leaf node.
         """
-
+        i = 0
         while node.has_children():
-            
             visits = torch.tensor([child.visits for child in node.children], dtype=torch.float)
-            values = torch.tensor([child.value for child in node.children], dtype=torch.float)
+            
+            if i % 2 == 0: # Negate the values for opponent's turn
+                values = torch.tensor([-child.value for child in node.children], dtype=torch.float)
+            else:
+                values = torch.tensor([child.value for child in node.children], dtype=torch.float)
+            
             policy_values = torch.tensor([child.policy_value for child in node.children], dtype=torch.float)
             parent_visits_sqrt = torch.tensor(node.visits, dtype=torch.float).sqrt_()
 
@@ -36,6 +40,7 @@ class AlphaZero:
 
             max_puct_index = torch.argmax(puct_values).item() # Find the index of the child with the highest PUCT value
             node = node.children[max_puct_index] # Return the best child node based on PUCT value
+            i += 1
         
         return node
 
@@ -97,10 +102,11 @@ class AlphaZero:
                 # print("Value:", value, "Policy", policy)
                 self.expand(node, policy)  # creates all its children
                 winner = value
+                self.backpropagate(node, winner)
             else:
                 player = (node.parent.state.current_player())  # Here state is terminal, so we get the winning player
                 winner = node.state.returns()[player]
-            self.backpropagate(node, winner)
+                self.backpropagate(node.parent, winner)
         
         for child in root_node.children:
             print(f'Action: {child.action}, Visits: {child.visits}, Value: {child.value}, Policy Value: {child.policy_value}')

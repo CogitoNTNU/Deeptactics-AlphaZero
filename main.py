@@ -36,9 +36,9 @@ def train_tic_tac_toe(model_path: str):
                     alphazero=AlphaZero(game_name="tic_tac_toe"),
                     nn=NeuralNetwork().load(model_path),
                     nn_save_path=model_path,
-                    num_games=360,
-                    num_simulations=300,
-                    epochs=2,
+                    num_games=96,
+                    num_simulations=100,
+                    epochs=3,
                     batch_size=32,
                )
                print(f'Training session {i + 1} finished!')
@@ -53,10 +53,10 @@ def train_connect_four(model_path: str):
                     alphazero=AlphaZero(game_name="connect_four"),
                     nn=NeuralNetworkConnectFour().load(model_path),
                     nn_save_path=model_path,
-                    num_games=24,
-                    num_simulations=500,
-                    epochs=2,
-                    batch_size=16,
+                    num_games=96,
+                    num_simulations=100,
+                    epochs=3,
+                    batch_size=256,
                )
                print(f'Training session {i + 1} finished!')
      except KeyboardInterrupt:
@@ -66,17 +66,18 @@ def train_connect_four(model_path: str):
 def self_play():
      play_alphazero("./models/great_tic_tac_toe")
 
-def play(game_name: str, model_path: str):
+def play(game_name: str, model_path: str, first: bool):
      play_vs_alphazero(game_name,
-                       nn = NeuralNetworkConnectFour.load(model_path)
+                       nn = NeuralNetworkConnectFour.load(model_path),
+                       first = first
                        )
 
 if __name__ == '__main__': # Needed for multiprocessing to work
      
      # test_overfit()
      # train_tic_tac_toe("./good_exploration_nn")
-     train_connect_four("./models/connect_four/initial_test")
+     # train_connect_four("./models/connect_four/initial_test")
      # self_play()
-     # play(game_name="connect_four", model_path="./models/connect_four/initial_test")
+     play(game_name="connect_four", model_path="./models/connect_four/initial_test", first=False)
      # create_tic_tac_toe_model("initial_test")
      # create_connect_four_model("initial_test")

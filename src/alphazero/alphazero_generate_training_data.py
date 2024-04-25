@@ -104,7 +104,7 @@ def generate_training_data(alphazero: AlphaZero, nn: NeuralNetwork, num_games: i
         with mp.Pool(thread_count) as pool:
             result_list = list(tqdm(pool.starmap(play_alphazero_games, multicore_args)))
         end_time = time.time()
-        print(f"Generated training data with {mp.cpu_count()} threads in {end_time - start_time:.2f} seconds.")
+        print(f"Generated training data with {thread_count} threads in {end_time - start_time:.2f} seconds.")
 
         # Process results only if data generation was successful
         for i in range(len(result_list)):

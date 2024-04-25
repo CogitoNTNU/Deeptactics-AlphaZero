@@ -66,40 +66,27 @@ class AlphaZero(torch.nn.Module):
         Chooses the node with the highest UCB-score at each layer.
         Returns a leaf node.
         """
+        i = 0
+        while (node.has_children()):
 
-        while (
-            node.has_children()
-        ):  ## TODO: Check how to force cpu, possibly switch self.device with torch.device("cpu")
+            visits = torch.tensor([child.visits for child in node.children], dtype=torch.float)
 
-            visits = torch.tensor(
-                [child.visits for child in node.children],
-                dtype=torch.float,
-            )
-            values = torch.tensor(
-                [child.value for child in node.children],
-                dtype=torch.float,
-            )
-            policy_values = torch.tensor(
-                [child.policy_value for child in node.children],
-                dtype=torch.float,
-            )
-            parent_visits_sqrt = torch.tensor(
-                node.visits, dtype=torch.float
-            ).sqrt_()
+            if i & 1 == 0: # Negate the values for opponent's turn
+                values = torch.tensor([-child.value for child in node.children], dtype=torch.float)
+            else:
+                values = torch.tensor([child.value for child in node.children], dtype=torch.float)
+
+            policy_values = torch.tensor([child.policy_value for child in node.children], dtype=torch.float,)
+            parent_visits_sqrt = torch.tensor(node.visits, dtype=torch.float).sqrt_()
 
             # Compute PUCT for all children in a vectorized manner
-            Q = torch.where(
-                visits > 0, values / visits, 0
-            )
+            Q = torch.where(visits > 0, values / visits, 0)
             U = self.c * policy_values * parent_visits_sqrt / (1 + visits)
             puct_values = Q + U
 
-            max_puct_index = torch.argmax(
-                puct_values
-            ).item()  # Find the index of the child with the highest PUCT value
-            node = node.children[
-                max_puct_index
-            ]  # Return the best child node based on PUCT value
+            max_puct_index = torch.argmax(puct_values).item()  # Find the index of the child with the highest PUCT value
+            node = node.children[max_puct_index]  # Return the best child node based on PUCT value
+            i += 1
 
         return node
 
@@ -203,17 +190,15 @@ class AlphaZero(torch.nn.Module):
 
                 node = self.vectorized_select(root_node)  # Get desired child node
                 if not node.state.is_terminal() and not node.has_children():
-                    policy, value = self.evaluate(
-                        node, neural_network
-                    )  # Evaluate the node, using the neural network
+                    policy, value = self.evaluate(node, neural_network) # Evaluate the node, using the neural network
+                    # print("Value:", value, "Policy", policy)
                     self.expand(node, policy)  # creates all its children
                     winner = value
+                    self.backpropagate(node, winner)
                 else:
-                    player = (
-                        node.parent.state.current_player()
-                    )  # Here state is terminal, so we get the winning player
+                    player = (node.parent.state.current_player())  # Here state is terminal, so we get the winning player
                     winner = node.state.returns()[player]
-                self.backpropagate(node, winner)
+                    self.backpropagate(node.parent, winner)
 
             normalized_root_node_children_visits = generate_probabilty_target(root_node, self.num_actions, self.device)
 
