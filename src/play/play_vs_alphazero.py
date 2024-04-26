@@ -1,5 +1,6 @@
 from src.neuralnet.neural_network import NeuralNetwork
-from src.alphazero.alphazero_play_agent import AlphaZero
+from src.alphazero.agents.alphazero_play_agent import AlphaZero
+from src.utils.game_context import GameContext
 
 def player(state):
     action = None
@@ -17,15 +18,15 @@ def player(state):
     state.apply_action(action)
 
 
-def ai(state, alphazero: AlphaZero, nn: NeuralNetwork):
-    action = alphazero.run_simulation(state, nn, num_simulations = 1000)
+def ai(state, alphazero: AlphaZero):
+    action = alphazero.run_simulation(state, num_simulations = 1000)
     state.apply_action(action)
 
 
-def play_game(player1, player2, state, alphazero: AlphaZero, nn: NeuralNetwork, first: bool):
+def play_game(player1, player2, state, alphazero: AlphaZero, first: bool):
     
     if not first:
-        player2(state, alphazero, nn)
+        player2(state, alphazero)
     
     while not state.is_terminal():
         print('~~~~~~~~~~~~~~~ PLAYER 1 ~~~~~~~~~~~~~~~~')
@@ -35,14 +36,13 @@ def play_game(player1, player2, state, alphazero: AlphaZero, nn: NeuralNetwork, 
         print(state)
         if state.is_terminal():
             break
-        player2(state, alphazero, nn)
+        player2(state, alphazero)
         if state.is_terminal():
             print('~~~~~~~~~~~~~~~ PLAYER 1 ~~~~~~~~~~~~~~~~')
             print(state)
 
 
-def main(game_name: str, nn: NeuralNetwork, first: bool):
-    alphazero = AlphaZero(game_name=game_name)
-    nn.to(alphazero.device)
-    state = alphazero.game.new_initial_state()
-    play_game(player, ai, state, alphazero, nn, first)
+def main(context: GameContext, first: bool):
+    alphazero = AlphaZero(context=context)
+    state = alphazero.context.game.new_initial_state()
+    play_game(player, ai, state, alphazero, first)

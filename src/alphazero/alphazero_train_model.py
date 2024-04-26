@@ -7,12 +7,11 @@ import torch
 from torch import optim
 import torch.nn.functional as F
 
-from src.alphazero.alphazero_training_agent import AlphaZero
-from src.neuralnet.neural_network import NeuralNetwork
+from src.alphazero.agents.alphazero_training_agent import AlphaZero
 from src.alphazero.alphazero_generate_training_data import generate_training_data
+from src.utils.game_context import GameContext
 
-
-def train_alphazero_model(alphazero: AlphaZero, nn: NeuralNetwork, nn_save_path: str, num_games: int, num_simulations: int, epochs: int, batch_size: int):
+def train_alphazero_model(context: GameContext, num_games: int, num_simulations: int, epochs: int, batch_size: int):
     """
     Parameters:
     - num_games: The number of games to play, and use for training.
@@ -31,16 +30,11 @@ def train_alphazero_model(alphazero: AlphaZero, nn: NeuralNetwork, nn_save_path:
     Batch size is the number of training samples to use for gradient calculation.
     """
 
-    nn.to(alphazero.device)
+    alphazero = AlphaZero(context)
+    nn = alphazero.context.nn
+    optimizer = optim.Adam(nn.parameters(), lr=1e-4, weight_decay=1e-4)  # Weight decay is L2 regularization
     
-    optimizer = optim.Adam(
-        nn.parameters(), lr=1e-4, weight_decay=1e-4
-    )  # Weight decay is L2 regularization
-    
-    state_tensors, probability_tensors, reward_tensors = generate_training_data(
-        alphazero, nn, num_games, num_simulations
-    )
-    
+    state_tensors, probability_tensors, reward_tensors = generate_training_data(alphazero, num_games, num_simulations)
     num_samples = state_tensors.size(0)
     
     try:    
@@ -81,10 +75,10 @@ def train_alphazero_model(alphazero: AlphaZero, nn: NeuralNetwork, nn_save_path:
                 f"Epoch {epoch+1}\n(Per sample) Total Loss: {total_loss / num_samples}, Policy Loss: {policy_loss_tot / num_samples}, Value Loss: {value_loss_tot / num_samples}"
             )
 
-        nn.save(nn_save_path)
+        nn.save(alphazero.context.save_path)
         print(f"\nEpoch {epoch + 1}: Model saved!")
 
     except KeyboardInterrupt:
-        nn.save(nn_save_path)
+        nn.save(alphazero.context.save_path)
         print("\nModel saved!")
         raise KeyboardInterrupt

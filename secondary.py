@@ -2,9 +2,9 @@ import torch
 import pyspiel
 from torch.distributions.dirichlet import Dirichlet
 from icecream import ic
-from play.play_vs_alphazero import main
-import src.alphazero.alphazero_training_agent as az
-
+from src.play.play_vs_alphazero import main
+import src.alphazero.agents.alphazero_training_agent as az
+import src.alphazero.debug.simulate_state as ss
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -113,3 +113,19 @@ state.apply_action(1)
 ic(state)
 state_tensor = torch.reshape(torch.tensor(state.observation_tensor(), device=device), shape).unsqueeze(0)
 ic(state_tensor)
+
+
+board_string = """
+    .......
+    .......
+    .......
+    ...o...
+    x..o...
+    xx.ooxx
+    """
+
+rows = board_string.strip().split('\n')
+for string in reversed(rows):
+    print(string)
+
+ss.main()

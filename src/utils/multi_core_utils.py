@@ -1,9 +1,9 @@
 import torch.multiprocessing as mp
-from src.alphazero.alphazero_training_agent import AlphaZero
+from src.alphazero.agents.alphazero_training_agent import AlphaZero
 from src.neuralnet.neural_network import NeuralNetwork
 
 def get_play_alphazero_games_arguments(
-        alphazero: AlphaZero, nn: NeuralNetwork, num_games: int, num_simulations: int
+        alphazero: AlphaZero, num_games: int, num_simulations: int
         ) -> tuple[list[tuple[AlphaZero, NeuralNetwork, int, int]], int]:
     """
     Parameters:
@@ -23,7 +23,7 @@ def get_play_alphazero_games_arguments(
     num_games_per_thread = num_games // number_of_threads
     remainder = num_games % number_of_threads
 
-    arguments = [(alphazero, nn, num_games_per_thread, num_simulations) for _ in range(number_of_threads - remainder)]
-    arguments.extend([(alphazero, nn, num_games_per_thread + 1, num_simulations) for _ in range(remainder)])
+    arguments = [(alphazero, num_games_per_thread, num_simulations) for _ in range(number_of_threads - remainder)]
+    arguments.extend([(alphazero, num_games_per_thread + 1, num_simulations) for _ in range(remainder)])
     
     return arguments, number_of_threads

@@ -1,8 +1,9 @@
 import torch
 from torch.distributions.dirichlet import Dirichlet
 from src.alphazero.node import Node
+from src.utils.game_context import GameContext
 
-def generate_dirichlet_noise(num_actions: int, alpha: float, device: torch.device) -> torch.Tensor:
+def generate_dirichlet_noise(context: GameContext, num_legal_actions: int, alpha: float) -> torch.Tensor:
     """
     Generates a Dirichlet noise tensor, which is used to encourage exploration in the policy values.
     The Dirichlet distribution is a multivariate generalization of the Beta distribution.
@@ -14,10 +15,10 @@ def generate_dirichlet_noise(num_actions: int, alpha: float, device: torch.devic
     Returns:
     - torch.Tensor - The Dirichlet noise tensor
     """
-    return Dirichlet(torch.tensor([alpha] * num_actions, dtype=torch.float, device=device)).sample()
+    return Dirichlet(torch.tensor([alpha] * num_legal_actions, dtype=torch.float, device=context.device)).sample()
 
 
-def generate_probabilty_target(root_node: Node, num_actions: int, device: torch.device) -> torch.Tensor:
+def generate_probabilty_target(root_node: Node, context: GameContext) -> torch.Tensor:
     """
     Generates a probability target tensor, which is used to train the neural network.
     The probability target tensor is a tensor containing the probability values for each action in the current state.
@@ -29,7 +30,7 @@ def generate_probabilty_target(root_node: Node, num_actions: int, device: torch.
     Returns:
     - torch.Tensor - The probability target tensor
     """
-    normalized_root_node_children_visits = torch.zeros(num_actions, device=device, dtype=torch.float)
+    normalized_root_node_children_visits = torch.zeros(context.num_actions, device=context.device, dtype=torch.float)
 
     parent_visits = root_node.visits
     for child in root_node.children:
