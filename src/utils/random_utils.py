@@ -30,7 +30,7 @@ def generate_probabilty_target(root_node: Node, context: GameContext) -> torch.T
     Returns:
     - torch.Tensor - The probability target tensor
     """
-    normalized_root_node_children_visits = torch.zeros(context.num_actions, device=context.device, dtype=torch.float)
+    normalized_root_node_children_visits = torch.zeros(context.num_actions, device=context.device)
 
     parent_visits = root_node.visits - 1 # Root node gets one more visit than its children (due to the very first selection step)
     for child in root_node.children:
