@@ -57,6 +57,7 @@ class AlphaZero(torch.nn.Module):
         After temperature_moves, the move played is deterministically the one visited the most.
         """
 
+    # @profile
     def run_simulation(
         self, state: pyspiel.State, move_number: int, num_simulations: int = 800
     ) -> tuple[int, torch.Tensor]:
@@ -70,6 +71,7 @@ class AlphaZero(torch.nn.Module):
             )  # Initialize root node, and do dirichlet expand to get some exploration
             policy, value = evaluate(root_node, self.context)  # Evaluate the root node
             dirichlet_expand(self.context, root_node, policy, self.a, self.e)
+            backpropagate(root_node, value)
 
             for _ in range(num_simulations - 1):  # Do the selection, expansion & evaluation, backpropagation
 
@@ -86,7 +88,7 @@ class AlphaZero(torch.nn.Module):
                 backpropagate(node, value)
 
             normalized_root_node_children_visits = generate_probabilty_target(root_node, self.context)
-
+            
             if move_number > self.temperature_moves:
                 return (
                     max(root_node.children, key=lambda node: node.visits).action,
