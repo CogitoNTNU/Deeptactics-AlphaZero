@@ -11,6 +11,7 @@ from src.utils.game_context import GameContext
 from src.utils.random_utils import generate_dirichlet_noise
 
 
+# @profile
 def vectorized_select(node: Node, c: float) -> Node: # OPTIMIZATION for GPU, great speedup is expected when number of children is large.
     """
     Select stage of MCTS.
@@ -18,31 +19,30 @@ def vectorized_select(node: Node, c: float) -> Node: # OPTIMIZATION for GPU, gre
     Chooses the node with the highest UCB-score at each layer.
     Returns a leaf node.
     """
+
     while node.has_children():
-        visits = torch.tensor([child.visits for child in node.children], dtype=torch.float)
+
+        if node.visits == 1: # Special case, saves some computation time
+            return node.children[torch.argmax(node.children_policy_values).item()]        
         
-        values = torch.tensor([child.value for child in node.children], dtype=torch.float)
-        
-        policy_values = torch.tensor([child.policy_value for child in node.children], dtype=torch.float)
-        parent_visits_sqrt = torch.tensor(node.visits, dtype=torch.float).sqrt_()
+        const = c * node.visits**0.5
 
         # Compute PUCT for all children in a vectorized manner
-        Q = torch.where(visits > 0, values / visits, torch.zeros_like(visits))
-        U = c * policy_values * parent_visits_sqrt / (1 + visits)
-        puct_values = Q + U
+        Q = torch.where(node.children_visits > 0, node.children_values / node.children_visits, torch.zeros_like(node.children_values))
+        Q.add_(const * (node.children_policy_values / node.children_visits.add(torch.ones_like(node.children_visits)) ))
 
-        max_puct_index = torch.argmax(puct_values).item() # Find the index of the child with the highest PUCT value
-        node = node.children[max_puct_index] # Return the best child node based on PUCT value
+        node = node.children[torch.argmax(Q).item()] # Return the best child node based on PUCT value
     
     return node
 
-def evaluate(node: Node, context: GameContext) -> float:
+
+def evaluate(node: Node, context: GameContext) -> tuple[torch.Tensor, float]:
     """
     Neural network evaluation of the state of the input node.
     Will not be run on a leaf node (terminal state)
     """
     policy, value = forward_state(node.state, context)
-    return policy, value
+    return policy, value.item()
 
 def expand(node: Node, nn_policy_values: torch.Tensor) -> None:
     """
@@ -56,10 +56,11 @@ def expand(node: Node, nn_policy_values: torch.Tensor) -> None:
     """
     legal_actions = node.state.legal_actions()
     normalize_policy_values(nn_policy_values, legal_actions)
+    node.set_children_policy_values(nn_policy_values[legal_actions].to("cpu"))
     for action in legal_actions: # Add the children with correct policy values
         new_state = node.state.clone()
         new_state.apply_action(action)
-        node.children.append(Node(node, new_state, action, nn_policy_values[action]))
+        node.children.append(Node(node, new_state, action, nn_policy_values[action].item()))
 
 def dirichlet_expand(context: GameContext, node: Node, nn_policy_values: torch.Tensor, alpha: float, epsilon: float) -> None:
     """
@@ -90,6 +91,7 @@ def dirichlet_expand(context: GameContext, node: Node, nn_policy_values: torch.T
     legal_actions = node.state.legal_actions()
     noise = generate_dirichlet_noise(context, len(legal_actions), alpha)
     normalize_policy_values_with_noise(nn_policy_values, legal_actions, noise, epsilon)
+    node.set_children_policy_values(nn_policy_values[legal_actions].to("cpu"))
 
     for action in legal_actions:  # Add the children with correct policy values
         new_state = node.state.clone()
@@ -98,11 +100,17 @@ def dirichlet_expand(context: GameContext, node: Node, nn_policy_values: torch.T
             Node(node, new_state, action, nn_policy_values[action])
         )
 
-def backpropagate(node: Node, result: torch.Tensor) -> None:
+def backpropagate(node: Node, value: torch.Tensor) -> None:
     """
     Return the results all the way back up the game tree.
     """
     node.visits += 1
     if node.parent != None:
-        node.value += result
-        backpropagate(node.parent, -result)
+        
+        parent = node.parent
+        index = parent.children.index(node)
+        parent.children_visits[index] += 1
+        parent.children_values[index] += value
+        
+        node.value += value
+        backpropagate(parent, -value)

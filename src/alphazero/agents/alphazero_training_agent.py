@@ -83,12 +83,12 @@ class AlphaZero(torch.nn.Module):
                 
                 else:
                     player = (node.parent.state.current_player())  # Here state is terminal, so we get the winning player
-                    value = torch.tensor(node.state.returns()[player], device=self.context.device)
+                    value = node.state.returns()[player]
                     
                 backpropagate(node, value)
 
             normalized_root_node_children_visits = generate_probabilty_target(root_node, self.context)
-            
+
             if move_number > self.temperature_moves:
                 return (
                     max(root_node.children, key=lambda node: node.visits).action,

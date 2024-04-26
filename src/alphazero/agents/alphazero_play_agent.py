@@ -30,7 +30,7 @@ class AlphaZero:
             
             else:
                 player = node.parent.state.current_player()  # Here state is terminal, so we get the winning player
-                value = torch.tensor(node.state.returns()[player], device=self.context.device)
+                value = node.state.returns()[player]
                 
             backpropagate(node, value)
         

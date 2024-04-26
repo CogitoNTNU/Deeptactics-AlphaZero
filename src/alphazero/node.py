@@ -1,4 +1,6 @@
 import pyspiel
+import torch
+
 # M0nt3 Carl0 Tr33 S3arch
 class Node:
 
@@ -8,7 +10,7 @@ class Node:
         """
         A list of game states you can reach from the current node.
         """
-        
+        # TODO: ASSIGN TORCH TENSOR WITH POLICY VALUES TO CHILDREN
         self.parent: 'Node' = parent
         """
         The node representing the state which came before the current node.
@@ -40,11 +42,36 @@ class Node:
         The value of the policy network from the parent node.
         """
 
+        self.children_policy_values: torch.Tensor = None
+        """
+        The policy values of the children of the current node.
+        """
+
+        self.children_visits: torch.Tensor = None
+        """
+        The number of visits to the children of the current node.
+        """
+
+        self.children_values: torch.Tensor = None
+        """
+        The values of the children of the current node.
+        """
+
+
     def has_children(self) -> bool:
         """
         Returns True if the state has children.
         """
         return len(self.children) > 0
+    
+    def set_children_policy_values(self, policy_values) -> None:
+        """
+        Sets the policy values of the children of the current node.
+        Additionally, initializes the children_visits and children_values tensors.
+        """
+        self.children_policy_values = policy_values
+        self.children_visits = torch.zeros_like(policy_values)
+        self.children_values = torch.zeros_like(policy_values)
 
     def __repr__(self) -> str:
         return str(self.state)
