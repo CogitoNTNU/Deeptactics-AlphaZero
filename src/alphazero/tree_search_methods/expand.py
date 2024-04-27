@@ -1,9 +1,11 @@
 import torch
 from src.alphazero.node import Node
 from src.utils.game_context import GameContext
-from src.utils.tensor_utils import normalize_policy_values, normalize_policy_values_with_noise
+from src.utils.tensor_utils import normalize_policy_values_with_noise
 from src.utils.random_utils import generate_dirichlet_noise
 
+
+# @profile
 def expand(node: Node, nn_policy_values: torch.Tensor) -> None:
     """
     Takes in a node, and adds all children.
@@ -14,13 +16,18 @@ def expand(node: Node, nn_policy_values: torch.Tensor) -> None:
     Therefore, we normalize the policy values by applying the softmax normalization function to form a probability
     distribution for action selection.
     """
-    legal_actions = node.state.legal_actions()
-    normalize_policy_values(nn_policy_values, legal_actions)
-    node.set_children_policy_values(nn_policy_values[legal_actions].to("cpu"))
-    for action in legal_actions: # Add the children with correct policy values
-        new_state = node.state.clone()
+    state = node.state
+    legal_actions = state.legal_actions()
+    nn_policy_values = nn_policy_values.cpu()
+    policy_values = torch.softmax(nn_policy_values[legal_actions], dim=0)
+    node.set_children_policy_values(policy_values)
+
+    children = node.children
+    for action, policy_value in zip(legal_actions, policy_values):
+        new_state = state.clone()
         new_state.apply_action(action)
-        node.children.append(Node(node, new_state, action, nn_policy_values[action].item()))
+        children.append(Node(node, new_state, action, policy_value))
+  
 
 def dirichlet_expand(context: GameContext, node: Node, nn_policy_values: torch.Tensor, alpha: float, epsilon: float) -> None:
     """
@@ -51,11 +58,12 @@ def dirichlet_expand(context: GameContext, node: Node, nn_policy_values: torch.T
     legal_actions = node.state.legal_actions()
     noise = generate_dirichlet_noise(context, len(legal_actions), alpha)
     normalize_policy_values_with_noise(nn_policy_values, legal_actions, noise, epsilon)
-    node.set_children_policy_values(nn_policy_values[legal_actions].to("cpu"))
+    policy_values = nn_policy_values.to("cpu")
+    node.set_children_policy_values(policy_values[legal_actions])
 
     for action in legal_actions:  # Add the children with correct policy values
         new_state = node.state.clone()
         new_state.apply_action(action)
         node.children.append(
-            Node(node, new_state, action, nn_policy_values[action])
+            Node(node, new_state, action, policy_values[action])
         )
