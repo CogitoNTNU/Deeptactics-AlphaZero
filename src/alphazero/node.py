@@ -10,7 +10,7 @@ class Node:
         """
         A list of game states you can reach from the current node.
         """
-        # TODO: ASSIGN TORCH TENSOR WITH POLICY VALUES TO CHILDREN
+        
         self.parent: 'Node' = parent
         """
         The node representing the state which came before the current node.
