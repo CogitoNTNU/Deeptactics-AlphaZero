@@ -14,15 +14,17 @@ It returns the best action to take, and the probability distribution of the root
 """
 
 import os
-
 import pyspiel
 import torch
 
 from src.alphazero.node import Node
-from src.utils.random_utils import generate_probabilty_target
-
 from src.utils.game_context import GameContext
-from src.alphazero.alphazero_tree_search_methods import vectorized_select, evaluate, expand, backpropagate, dirichlet_expand
+
+from src.utils.random_utils import generate_probabilty_target
+from src.alphazero.tree_search_methods.select import vectorized_select
+from src.alphazero.tree_search_methods.evaluate import evaluate
+from src.alphazero.tree_search_methods.expand import expand, dirichlet_expand
+from src.alphazero.tree_search_methods.backpropagate import backpropagate
 
 class AlphaZero(torch.nn.Module):
 
@@ -34,7 +36,7 @@ class AlphaZero(torch.nn.Module):
         Contains useful information like the game, neural network and device.
         """
 
-        self.c = c  # Exploration constant
+        self.c = c
         """
         An exploration constant, used when calculating PUCT-values.
         """
@@ -66,9 +68,7 @@ class AlphaZero(torch.nn.Module):
         Returns an action to be played.
         """
         try: 
-            root_node = Node(
-                parent=None, state=state, action=None, policy_value=None
-            )  # Initialize root node, and do dirichlet expand to get some exploration
+            root_node = Node(parent=None, state=state, action=None, policy_value=None)
             policy, value = evaluate(root_node, self.context)  # Evaluate the root node
             dirichlet_expand(self.context, root_node, policy, self.a, self.e)
             backpropagate(root_node, value)
@@ -82,7 +82,7 @@ class AlphaZero(torch.nn.Module):
                     expand(node, policy)
                 
                 else:
-                    player = (node.parent.state.current_player())  # Here state is terminal, so we get the winning player
+                    player = node.parent.state.current_player()
                     value = node.state.returns()[player]
                     
                 backpropagate(node, value)
@@ -93,7 +93,7 @@ class AlphaZero(torch.nn.Module):
                 return (
                     max(root_node.children, key=lambda node: node.visits).action,
                     normalized_root_node_children_visits
-                )  # The best action is the one with the most visits
+                )
             else:
                 masked_values = torch.where(normalized_root_node_children_visits > 0, normalized_root_node_children_visits, torch.tensor(float('-inf'), device=self.context.device))
                 probabilities = torch.softmax(masked_values, dim=0) # Temperature-like exploration

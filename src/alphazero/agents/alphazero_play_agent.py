@@ -1,9 +1,10 @@
-import pyspiel
-import torch
-
 from src.alphazero.node import Node
 from src.utils.game_context import GameContext
-from src.alphazero.alphazero_tree_search_methods import vectorized_select, evaluate, expand, backpropagate
+from src.alphazero.tree_search_methods.select import vectorized_select
+from src.alphazero.tree_search_methods.evaluate import evaluate
+from src.alphazero.tree_search_methods.expand import expand
+from src.alphazero.tree_search_methods.backpropagate import backpropagate
+
 
 class AlphaZero:
 
@@ -29,7 +30,7 @@ class AlphaZero:
                 expand(node, policy)
             
             else:
-                player = node.parent.state.current_player()  # Here state is terminal, so we get the winning player
+                player = node.parent.state.current_player()
                 value = node.state.returns()[player]
                 
             backpropagate(node, value)
@@ -58,9 +59,3 @@ def alphazero_self_play(context: GameContext, num_simulations=800):
     print("Game over!")
     print("Player 1 score: ", state.returns()[0], "\nPlayer 2 score: ", state.returns()[1])
 
-
-
-"""
-state.returns() -> rewards for the game.
-state.apply_action(action) -> Play an action [number from 0 to 8 for tic-tac-toe]
-"""

@@ -1,48 +1,8 @@
-"""
-Selection, expansion & evaluation, backpropagation.
-These methods are standard for AlphaZero.
-"""
-
 import torch
 from src.alphazero.node import Node
-from src.utils.nn_utils import forward_state
-from src.utils.tensor_utils import normalize_policy_values, normalize_policy_values_with_noise
 from src.utils.game_context import GameContext
+from src.utils.tensor_utils import normalize_policy_values, normalize_policy_values_with_noise
 from src.utils.random_utils import generate_dirichlet_noise
-
-
-# @profile
-def vectorized_select(node: Node, c: float) -> Node: # OPTIMIZATION for GPU, great speedup is expected when number of children is large.
-    """
-    Select stage of MCTS.
-    Go through the game tree, layer by layer.
-    Chooses the node with the highest UCB-score at each layer.
-    Returns a leaf node.
-    """
-
-    while node.has_children():
-
-        if node.visits == 1: # Special case, saves some computation time
-            return node.children[torch.argmax(node.children_policy_values).item()]        
-        
-        const = c * node.visits**0.5
-
-        # Compute PUCT for all children in a vectorized manner
-        Q = torch.where(node.children_visits > 0, node.children_values / node.children_visits, torch.zeros_like(node.children_values))
-        Q.add_(const * (node.children_policy_values / node.children_visits.add(torch.ones_like(node.children_visits)) ))
-
-        node = node.children[torch.argmax(Q).item()] # Return the best child node based on PUCT value
-    
-    return node
-
-
-def evaluate(node: Node, context: GameContext) -> tuple[torch.Tensor, float]:
-    """
-    Neural network evaluation of the state of the input node.
-    Will not be run on a leaf node (terminal state)
-    """
-    policy, value = forward_state(node.state, context)
-    return policy, value.item()
 
 def expand(node: Node, nn_policy_values: torch.Tensor) -> None:
     """
@@ -99,18 +59,3 @@ def dirichlet_expand(context: GameContext, node: Node, nn_policy_values: torch.T
         node.children.append(
             Node(node, new_state, action, nn_policy_values[action])
         )
-
-def backpropagate(node: Node, value: torch.Tensor) -> None:
-    """
-    Return the results all the way back up the game tree.
-    """
-    node.visits += 1
-    if node.parent != None:
-        
-        parent = node.parent
-        index = parent.children.index(node)
-        parent.children_visits[index] += 1
-        parent.children_values[index] += value
-        
-        node.value += value
-        backpropagate(parent, -value)
