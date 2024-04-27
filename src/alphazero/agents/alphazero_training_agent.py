@@ -28,7 +28,7 @@ from src.alphazero.tree_search_methods.backpropagate import backpropagate
 
 class AlphaZero(torch.nn.Module):
 
-    def __init__(self, context: GameContext, c: float = 4.0, alpha: float = 0.3, epsilon: float = 0.75, temperature_moves: int = 30):
+    def __init__(self, context: GameContext, c: float = 4.0, alpha: float = 0.3, epsilon: float = 0.25, temperature_moves: int = 30):
         super(AlphaZero, self).__init__()
         
         self.context = context
@@ -70,7 +70,7 @@ class AlphaZero(torch.nn.Module):
         try: 
             root_node = Node(parent=None, state=state, action=None, policy_value=None)
             policy, value = evaluate(root_node, self.context)  # Evaluate the root node
-            dirichlet_expand(self.context, root_node, policy, self.a, self.e)
+            dirichlet_expand(root_node, policy, self.a, self.e)
             backpropagate(root_node, value)
 
             for _ in range(num_simulations - 1):  # Do the selection, expansion & evaluation, backpropagation

@@ -1,7 +1,8 @@
 import torch
 from torch.distributions.dirichlet import Dirichlet
 from src.alphazero.node import Node
-from src.utils.game_context import GameContext
+
+
 
 
 # @profile
@@ -26,9 +27,17 @@ def expand(node: Node, nn_policy_values: torch.Tensor) -> None:
         new_state = state.clone()
         new_state.apply_action(action)
         children.append(Node(node, new_state, action, policy_value))
-  
 
-def dirichlet_expand(context: GameContext, node: Node, nn_policy_values: torch.Tensor, alpha: float, epsilon: float) -> None:
+
+alpha_tensor_cache = {}
+
+def get_alpha_tensor(num_actions, alpha):
+    if num_actions not in alpha_tensor_cache:
+        alpha_tensor_cache[num_actions] = torch.full((num_actions,), alpha, dtype=torch.float)
+    return alpha_tensor_cache[num_actions]
+
+
+def dirichlet_expand(node: Node, nn_policy_values: torch.Tensor, alpha: float, epsilon: float) -> None:
     """
     TODO: Update this docstring
     Method for expanding the root node with dirichlet noise.
@@ -55,9 +64,10 @@ def dirichlet_expand(context: GameContext, node: Node, nn_policy_values: torch.T
     """
     state = node.state
     legal_actions = state.legal_actions()
-    noise = Dirichlet(torch.tensor([alpha] * len(legal_actions), dtype=torch.float)).sample()
     nn_policy_values = nn_policy_values.cpu()
-    policy_values_with_noise = torch.softmax(nn_policy_values[legal_actions], dim=0).mul_(epsilon).add_(noise.mul_(1 - epsilon))
+    alpha_tensor = get_alpha_tensor(len(legal_actions), alpha)
+    
+    policy_values_with_noise = torch.softmax(nn_policy_values[legal_actions], dim=0).mul_(1 - epsilon).add_(Dirichlet(alpha_tensor).sample().mul_(epsilon))
     node.set_children_policy_values(policy_values_with_noise)
 
     children = node.children
