@@ -162,7 +162,7 @@ cython_debug/
 
 .DS_Store
 .vscode/
-.lprof
+*.lprof
 /models
 /code_testing/
 
