@@ -6,6 +6,7 @@ This file takes in a neural network, and trains it using the AlphaZero algorithm
 import torch
 from torch import optim
 import torch.nn.functional as F
+import math
 
 from src.alphazero.agents.alphazero_training_agent import AlphaZero
 from src.alphazero.alphazero_generate_training_data import generate_training_data
@@ -69,9 +70,11 @@ def train_alphazero_model(context: GameContext, num_games: int, num_simulations:
                 optimizer.step()
 
                 # Track losses
+                print(f"Policy loss: {policy_loss.item()}, Value loss: {value_loss.item()}")
                 policy_loss_tot += policy_loss.item(); value_loss_tot += value_loss.item(); total_loss += loss.item()
                 
             print(
+                #total_loss / math.ceil(num_samples / batch_size),
                 f"Epoch {epoch+1}\n(Per sample) Total Loss: {total_loss / num_samples}, Policy Loss: {policy_loss_tot / num_samples}, Value Loss: {value_loss_tot / num_samples}"
             )
 

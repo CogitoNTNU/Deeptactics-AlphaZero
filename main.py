@@ -41,9 +41,9 @@ def train_tic_tac_toe(context: GameContext):
           for i in range(int(1e6)):
                train_alphazero_model(
                     context=context,
-                    num_games=96,
-                    num_simulations=100,
-                    epochs=3,
+                    num_games=50,
+                    num_simulations=20,
+                    epochs=2,
                     batch_size=32
                )
                print(f'Training session {i + 1} finished!')
@@ -51,15 +51,15 @@ def train_tic_tac_toe(context: GameContext):
           print('Training interrupted!')
 
 def train_connect_four(context: GameContext):
-     mp.set_start_method('spawn')
+     #mp.set_start_method('spawn')
      try:
           for i in range(int(1e6)):
                train_alphazero_model(
                     context=context,
                     num_games=48,
-                    num_simulations=100,
+                    num_simulations=175,
                     epochs=3,
-                    batch_size=256,
+                    batch_size=128,
                )
                print(f'Training session {i + 1} finished!')
      except KeyboardInterrupt:
@@ -77,25 +77,39 @@ def play(context: GameContext, first: bool):
 
 if __name__ == '__main__': # Needed for multiprocessing to work
 
-     tic_tac_toe_path = "./models/test_nn"
+     # tic_tac_toe_path = "./models/test_nn"
+     # tic_tac_toe_context = GameContext(
+     #      game_name="tic_tac_toe", 
+     #      nn=NeuralNetwork().load(tic_tac_toe_path), 
+     #      save_path=tic_tac_toe_path
+     # )
+
+     # connect4_path = "./models/connect_four/initial_test"
+     # connect4_context = GameContext(
+     #      game_name="connect_four", 
+     #      nn=NeuralNetworkConnectFour().load(connect4_path), 
+     #      save_path=connect4_path
+     # )
+     
+     path = "./models/brage_tic_tac_toe"
      tic_tac_toe_context = GameContext(
           game_name="tic_tac_toe", 
-          nn=NeuralNetwork().load(tic_tac_toe_path), 
-          save_path=tic_tac_toe_path
+          nn=NeuralNetwork().load(path), 
+          save_path=path
      )
-
-     connect4_path = "./models/connect_four/initial_test"
+     path2 = "./models/brage_connect4"
      connect4_context = GameContext(
           game_name="connect_four", 
-          nn=NeuralNetworkConnectFour().load(connect4_path), 
-          save_path=connect4_path
+          nn=NeuralNetworkConnectFour().load(path2), 
+          save_path=path2
      )
 
      # test_overfit()
      # train_tic_tac_toe(tic_tac_toe_context)
-     # train_connect_four(connect4_context)
      # self_play(context)
-     play(tic_tac_toe_context, first=False)
+     
+     train_connect_four(connect4_context)
+     # play(connect4_context, first=True)
      
      # create_tic_tac_toe_model("initial_test")
      # create_connect_four_model("initial_test")

@@ -26,8 +26,8 @@ class AlphaZero:
             
             if not node.state.is_terminal() and not node.has_children():
                 policy, value = evaluate(node, self.context) # Evaluate the node, using the neural network
+                value = -value
                 expand(node, policy)
-            
             else:
                 player = node.parent.state.current_player()  # Here state is terminal, so we get the winning player
                 value = node.state.returns()[player]
@@ -35,7 +35,8 @@ class AlphaZero:
             backpropagate(node, value)
         
         for child in root_node.children:
-            print(f'Action: {child.action}, Visits: {child.visits}, Value: {child.value}, Value type: {type(child.value)}, Policy Value: {child.policy_value}, Policy type: {type(child.policy_value)}')
+            #print(f'Action: {child.action}, Visits: {child.visits}, Value: {child.value}, Value type: {type(child.value)}, Policy Value: {child.policy_value}, Policy type: {type(child.policy_value)}')
+            print(f'Action: {child.action}, Visits: {child.visits}, Value: {round(float(child.value), 2)} Policy Value: {round(child.policy_value, 2)}')
         
         return max(root_node.children, key=lambda node: node.visits).action # The best action is the one with the most visits
         

@@ -9,6 +9,7 @@ from src.utils.nn_utils import forward_state
 from src.utils.tensor_utils import normalize_policy_values, normalize_policy_values_with_noise
 from src.utils.game_context import GameContext
 from src.utils.random_utils import generate_dirichlet_noise
+from math import sqrt
 
 
 # @profile
@@ -25,7 +26,7 @@ def vectorized_select(node: Node, c: float) -> Node: # OPTIMIZATION for GPU, gre
         if node.visits == 1: # Special case, saves some computation time
             return node.children[torch.argmax(node.children_policy_values).item()]        
         
-        const = c * node.visits**0.5
+        const = c * sqrt(node.visits)
 
         # Compute PUCT for all children in a vectorized manner
         Q = torch.where(node.children_visits > 0, node.children_values / node.children_visits, torch.zeros_like(node.children_values))

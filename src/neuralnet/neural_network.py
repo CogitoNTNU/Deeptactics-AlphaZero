@@ -104,7 +104,6 @@ class NeuralNetwork(nn.Module):
         Returns:
         - An instance of NeuralNetwork with weights loaded from the specified path.
         """
-        
         model = cls(hidden_dimension=hidden_dimension, input_dimension=input_dimension, res_blocks=res_blocks, game_size=game_size, legal_moves=legal_moves)        
         state_dict = torch.load(path)
         model.load_state_dict(state_dict)

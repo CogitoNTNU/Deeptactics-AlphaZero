@@ -26,7 +26,7 @@ from src.alphazero.alphazero_tree_search_methods import vectorized_select, evalu
 
 class AlphaZero(torch.nn.Module):
 
-    def __init__(self, context: GameContext, c: float = 4.0, alpha: float = 0.3, epsilon: float = 0.75, temperature_moves: int = 30):
+    def __init__(self, context: GameContext, c: float = 4.0, alpha: float = 0.3, epsilon: float = 0.75, temperature_moves: int = 7):
         super(AlphaZero, self).__init__()
         
         self.context = context
@@ -79,8 +79,8 @@ class AlphaZero(torch.nn.Module):
 
                 if not node.state.is_terminal() and not node.has_children():
                     policy, value = evaluate(node, self.context)
+                    value = -value
                     expand(node, policy)
-                
                 else:
                     player = (node.parent.state.current_player())  # Here state is terminal, so we get the winning player
                     value = node.state.returns()[player]

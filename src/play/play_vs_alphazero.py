@@ -19,7 +19,7 @@ def player(state):
 
 
 def ai(state, alphazero: AlphaZero):
-    action = alphazero.run_simulation(state, num_simulations = 1000)
+    action = alphazero.run_simulation(state, num_simulations = 350)
     state.apply_action(action)
 
 

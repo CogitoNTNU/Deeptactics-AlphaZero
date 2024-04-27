@@ -40,6 +40,7 @@ def play_alphazero_game(
         torch.tensor([rewards[i & 1]], dtype=torch.float, device=alphazero.context.device)
         ) for i, (state, probability_target) in enumerate(game_data)
     ]
+    print(f"Game finished with {len(training_data)} moves.")
 
     return training_data
 
@@ -81,11 +82,12 @@ def generate_training_data(alphazero: AlphaZero, num_games: int, num_simulations
 
     # result_list = [play_alphazero_games(alphazero, num_games, num_simulations)] # Single-threaded
     multicore_args, thread_count = get_play_alphazero_games_arguments(alphazero, num_games, num_simulations)
+    thread_count = 1
     try:
         print(f"Generating training data with {thread_count} threads...")
         start_time = time.time()
         with mp.Pool(thread_count) as pool:
-            result_list = list(tqdm(pool.starmap(play_alphazero_games, multicore_args)))
+            result_list = pool.starmap(play_alphazero_games, multicore_args)
         end_time = time.time()
         print(f"Generated training data with {thread_count} threads in {end_time - start_time:.2f} seconds.")
 
