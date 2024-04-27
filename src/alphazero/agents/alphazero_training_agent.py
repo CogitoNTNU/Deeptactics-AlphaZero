@@ -77,7 +77,7 @@ class AlphaZero(torch.nn.Module):
 
                 node = vectorized_select(root_node, self.c)
 
-                if not node.state.is_terminal() and not node.has_children():
+                if not node.state.is_terminal():
                     policy, value = evaluate(node, self.context)
                     expand(node, policy)
                 
