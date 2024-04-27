@@ -10,6 +10,7 @@ class AlphaZero:
 
     def __init__(self, context: GameContext):
         self.context = context
+        self.shape = [1] + context.game.observation_tensor_shape()
         self.c = 4.0 # Exploration constant
 
     def run_simulation(self, state, num_simulations=800): # Num-simulations 800 is good for tic-tac-toe
@@ -17,8 +18,8 @@ class AlphaZero:
         Selection, expansion & evaluation, backpropagation.
 
         """
-        root_node = Node(parent=None, state=state, action=None, policy_value=None)  # Initialize root node.
-        policy, value = evaluate(root_node, self.context)  # Evaluate the root node
+        root_node = Node(parent=None, state=state, action=None, policy_value=None)
+        policy, value = evaluate(root_node.state.observation_tensor(), self.shape, self.context.nn, self.context.device)
         print("Root node value: ", value)
 
         for _ in range(num_simulations):  # Do selection, expansion & evaluation, backpropagation
@@ -26,7 +27,7 @@ class AlphaZero:
             node = vectorized_select(root_node, self.c)
             
             if not node.state.is_terminal():
-                policy, value = evaluate(node, self.context) # Evaluate the node, using the neural network
+                policy, value = evaluate(node.state.observation_tensor(), self.shape, self.context.nn, self.context.device)
                 expand(node, policy)
             
             else:

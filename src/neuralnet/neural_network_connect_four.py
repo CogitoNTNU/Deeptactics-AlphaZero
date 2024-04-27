@@ -36,6 +36,7 @@ class NeuralNetworkConnectFour(nn.Module):
         self.hidden_dimension = hidden_dimension
         self.input_dimension = input_dimension
         self.res_blocks = res_blocks
+        self.legal_moves = legal_moves
 
         self.initial = nn.Sequential(
             nn.Conv2d(
@@ -78,6 +79,14 @@ class NeuralNetworkConnectFour(nn.Module):
             x = residual_block(x)
         policy = self.policy(x)
         value = self.value(x)
+        return policy, value
+    
+    def forward_for_alphazero(self, x: torch.Tensor) -> tuple[torch.Tensor, float]:
+        x = self.initial(x)
+        for residual_block in self.residual_blocks:
+            x = residual_block(x)
+        policy = self.policy(x).reshape(self.legal_moves)
+        value = self.value(x).item()
         return policy, value
     
     def save(self, path: str) -> None:

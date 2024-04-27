@@ -27,9 +27,9 @@ def play_alphazero_game(
     while not state.is_terminal():
         action, probability_target = alphazero.run_simulation(state, move_number, num_simulations=num_simulations)
         game_data.append((
-                reshape_pyspiel_state(state, alphazero.context),
-                probability_target
-            ))
+            reshape_pyspiel_state(state, alphazero.context),
+            probability_target
+        ))
         state.apply_action(action)
         move_number += 1
 
@@ -57,7 +57,6 @@ def play_alphazero_games(
         training_data.extend(play_alphazero_game(alphazero, num_simulations))
     return training_data
     
-
 def generate_training_data(alphazero: AlphaZero, num_games: int, num_simulations: int = 100) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Takes in a neural network, and generates training data by making the neural network play games against itself.
@@ -79,19 +78,23 @@ def generate_training_data(alphazero: AlphaZero, num_games: int, num_simulations
     
     training_data = []
 
-    # result_list = [play_alphazero_games(alphazero, num_games, num_simulations)] # Single-threaded
-    multicore_args, thread_count = get_play_alphazero_games_arguments(alphazero, num_games, num_simulations)
-    try:
-        print(f"Generating training data with {thread_count} threads...")
-        start_time = time.time()
-        with mp.Pool(thread_count) as pool:
-            result_list = list(tqdm(pool.starmap(play_alphazero_games, multicore_args)))
-        end_time = time.time()
-        print(f"Generated training data with {thread_count} threads in {end_time - start_time:.2f} seconds.")
+    start_time = time.time()
+    result_list = [play_alphazero_games(alphazero, num_games, num_simulations)] # Single-threaded
+    end_time = time.time()
+    print(f"Generated training data in {end_time - start_time:.2f} seconds.")
 
-    except KeyboardInterrupt:
-        print("KeyboardInterrupt: Terminating training data generation...")
-        raise
+    # multicore_args, thread_count = get_play_alphazero_games_arguments(alphazero, num_games, num_simulations)
+    # try:
+    #     print(f"Generating training data with {thread_count} threads...")
+    #     start_time = time.time()
+    #     with mp.Pool(thread_count) as pool:
+    #         result_list = list(tqdm(pool.starmap(play_alphazero_games, multicore_args)))
+    #     end_time = time.time()
+    #     print(f"Generated training data with {thread_count} threads in {end_time - start_time:.2f} seconds.")
+
+    # except KeyboardInterrupt:
+    #     print("KeyboardInterrupt: Terminating training data generation...")
+    #     raise
     
     for i in range(len(result_list)):
         training_data.extend(result_list[i])

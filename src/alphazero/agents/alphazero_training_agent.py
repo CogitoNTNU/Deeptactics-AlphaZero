@@ -36,6 +36,11 @@ class AlphaZero(torch.nn.Module):
         Contains useful information like the game, neural network and device.
         """
 
+        self.shape: list[int] = [1] + context.game.observation_tensor_shape()
+        """
+        The shape which the state tensor must have in order to be compatible with the neural network.
+        """
+
         self.c = c
         """
         An exploration constant, used when calculating PUCT-values.
@@ -59,7 +64,6 @@ class AlphaZero(torch.nn.Module):
         After temperature_moves, the move played is deterministically the one visited the most.
         """
 
-    # @profile
     def run_simulation(
         self, state: pyspiel.State, move_number: int, num_simulations: int = 800
     ) -> tuple[int, torch.Tensor]:
@@ -69,7 +73,7 @@ class AlphaZero(torch.nn.Module):
         """
         try: 
             root_node = Node(parent=None, state=state, action=None, policy_value=None)
-            policy, value = evaluate(root_node, self.context)  # Evaluate the root node
+            policy, value = evaluate(root_node.state.observation_tensor(), self.shape, self.context.nn, self.context.device)  # Evaluate the root node
             dirichlet_expand(root_node, policy, self.a, self.e)
             backpropagate(root_node, value)
 
@@ -78,7 +82,7 @@ class AlphaZero(torch.nn.Module):
                 node = vectorized_select(root_node, self.c)
 
                 if not node.state.is_terminal():
-                    policy, value = evaluate(node, self.context)
+                    policy, value = evaluate(node.state.observation_tensor(), self.shape, self.context.nn, self.context.device)
                     expand(node, policy)
                 
                 else:
