@@ -1,21 +1,6 @@
 import torch
-from torch.distributions.dirichlet import Dirichlet
 from src.alphazero.node import Node
 from src.utils.game_context import GameContext
-
-def generate_dirichlet_noise(context: GameContext, num_legal_actions: int, alpha: float) -> torch.Tensor:
-    """
-    Generates a Dirichlet noise tensor, which is used to encourage exploration in the policy values.
-    The Dirichlet distribution is a multivariate generalization of the Beta distribution.
-
-    Parameters:
-    - num_actions: int - The number of actions in the current state
-    - alpha: float - The concentration parameter of the Dirichlet distribution
-
-    Returns:
-    - torch.Tensor - The Dirichlet noise tensor
-    """
-    return Dirichlet(torch.tensor([alpha] * num_legal_actions, dtype=torch.float, device=context.device)).sample()
 
 
 def generate_probabilty_target(root_node: Node, context: GameContext) -> torch.Tensor:
