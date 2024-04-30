@@ -1,7 +1,6 @@
 import pyspiel
 # M0nt3 Carl0 Tr33 S3arch
 
-pyspiel.load_game()
 class Node:
 
     def __init__(self, parent: "Node", state: pyspiel.State, action: int):

@@ -46,18 +46,18 @@ class AlphaZero(torch.nn.Module):
         An exploration constant, used when calculating PUCT-values.
         """
 
-        self.a: float = alpha
+        self.a = alpha
         """
         Alpha-value, a parameter in the Dirichlet-distribution.
         """
 
-        self.e: float = epsilon
+        self.e = epsilon
         """
         Epsilon-value, determines how many percent of ... is determined by PUCT,
         and how much is determined by Dirichlet-distribution.
         """
 
-        self.temperature_moves: int = temperature_moves
+        self.temperature_moves = temperature_moves
         """
         Up to a certain number of moves have been played, the move played is taken from a
         probability distribution based on the most visited states.
@@ -73,11 +73,11 @@ class AlphaZero(torch.nn.Module):
         """
         try: 
             root_node = Node(parent=None, state=state, action=None, policy_value=None)
-            policy, value = evaluate(root_node.state.observation_tensor(), self.shape, self.context.nn, self.context.device)  # Evaluate the root node
+            policy, value = evaluate(root_node.state.observation_tensor(), self.shape, self.context.nn, self.context.device)
             dirichlet_expand(root_node, policy, self.a, self.e)
             backpropagate(root_node, value)
 
-            for _ in range(num_simulations - 1):  # Do the selection, expansion & evaluation, backpropagation
+            for _ in range(num_simulations - 1):  # Selection, evaluation & expansion, backpropagation
 
                 node = vectorized_select(root_node, self.c)
 
@@ -101,7 +101,7 @@ class AlphaZero(torch.nn.Module):
             else:
                 masked_values = torch.where(normalized_root_node_children_visits > 0, normalized_root_node_children_visits, torch.tensor(float('-inf'), device=self.context.device))
                 probabilities = torch.softmax(masked_values, dim=0) # Temperature-like exploration
-                action, probability_target = torch.multinomial(probabilities, num_samples=1).item(), normalized_root_node_children_visits
+                action, probability_target = torch.multinomial(probabilities, num_samples=1).item(), normalized_root_node_children_visits # TODO: Check this line, it really seems like something is wrong with our exploration.
                 return action, probability_target
         
         except KeyboardInterrupt:

@@ -22,7 +22,7 @@ class AlphaZero:
         policy, value = evaluate(root_node.state.observation_tensor(), self.shape, self.context.nn, self.context.device)
         print("Root node value: ", value)
 
-        for _ in range(num_simulations):  # Do selection, expansion & evaluation, backpropagation
+        for _ in range(num_simulations):  # Do selection, evaluation & expansion, backpropagation
 
             node = vectorized_select(root_node, self.c)
             
@@ -39,7 +39,10 @@ class AlphaZero:
         for child in root_node.children:
             print(f'Action: {child.action}, Visits: {child.visits}, Value: {child.value}, Value type: {type(child.value)}, Policy Value: {child.policy_value}, Policy type: {type(child.policy_value)}')
         
-        return max(root_node.children, key=lambda node: node.visits).action # The best action is the one with the most visits
+        chosen_action = max(root_node.children, key=lambda node: node.visits).action
+        print(f"Chosen action: {chosen_action}")
+
+        return chosen_action
         
         
 def alphazero_self_play(context: GameContext, num_simulations=800):

@@ -1,10 +1,9 @@
 import numpy as np
 import pyspiel
-
 from src.mcts.node import Node
 
-
 class Mcts:
+    
     def __init__(self):
         self.c = 1.41
 
@@ -22,8 +21,6 @@ class Mcts:
         Chooses the node with the highest UCB-score at each layer.
         Returns a
         """
-        # print("select")
-
         highest_ucb = -np.inf
         best_node: Node = None
         current_node = node
@@ -39,7 +36,6 @@ class Mcts:
         return current_node
 
     def expand(self, node: Node) -> None:
-        # print("expand")
         """
         Optional stage in the MCTS algorithm.
         If you select a leaf node, this method will not be run.
@@ -51,9 +47,6 @@ class Mcts:
             new_state = node.state.clone()
             new_state.apply_action(action)
             node.children.append(Node(node, new_state, action))
-        # print("State\n", node.state, "\nChild states")
-        # for child in node.children:
-        #     print(child.state)
 
     def simulate(self, node: Node):
         """
@@ -81,47 +74,32 @@ class Mcts:
         """
         root_node = Node(None, state, None)
         for _ in range(num_simulations):
-            node = self.select(root_node)  # Get desired childnode
+            node = self.select(root_node)
             if not node.state.is_terminal() and not node.has_children():
-                self.expand(node)  # creates all its children
+                self.expand(node)  # creates all children
                 winner = self.simulate(node)
             else:
-                player = (
-                    node.parent.state.current_player()
-                )  # Here state is terminal, so we get the winning player
-                if player is None:
-                    print("Player is none!")
+                player = node.parent.state.current_player()
                 winner = node.state.returns()[player]
             self.backpropagate(node, winner)
 
         print("num visits\t", [node.visits for node in root_node.children])
         print("actions\t\t", [node.action for node in root_node.children])
             
-        return max(
-            root_node.children, key=lambda node: node.visits
-        ).action  # The best action is the one with the most visits
+        return max(root_node.children, key=lambda node: node.visits).action
 
 
 if __name__ == "__main__":
-    # game = pyspiel.load_game("connect_four")
     game = pyspiel.load_game("tic_tac_toe")
-    # game = pyspiel.load_game("chess")
-    state = game.new_initial_state()
-    first_state = state.clone()
     mcts = Mcts()
+    state = game.new_initial_state()
+
     while not state.is_terminal():
         action = mcts.run_simulation(state, 1_000)
         print("best action\t", action, "\n")
         state.apply_action(action)
         print(state)
-        # print(np.reshape(np.asarray(state.observation_tensor()), game.observation_tensor_shape()))
         print()
         
     print(state.returns())
-
-
-"""
-state.returns() -> rewards for the game.
-state.apply_action(action) -> Play an action [number from 0 to 9]
-"""
 
