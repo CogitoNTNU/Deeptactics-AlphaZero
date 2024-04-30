@@ -50,8 +50,8 @@ def train_connect_four(context: GameContext):
           for i in range(int(1e6)):
                train_alphazero_model(
                     context=context,
-                    num_games=384,
-                    num_simulations=100,
+                    num_games=20,
+                    num_simulations=200,
                     epochs=3,
                     batch_size=256,
                )
@@ -63,10 +63,11 @@ def train_connect_four(context: GameContext):
 def self_play(context: GameContext):
      alphazero_self_play(context)
 
-def play(context: GameContext, first: bool):
+def play(context: GameContext, first: bool, mcts: bool = False):
      play_vs_alphazero(
           context=context,
-          first=first
+          first=first,
+          mcts=mcts
      )
 
 overfit_path = "./models/connect_four/overfit_nn"
@@ -102,6 +103,7 @@ if __name__ == '__main__': # Needed for multiprocessing to work
      # self_play(connect4_context)
      # play(tic_tac_toe_context, first=False)
      play(connect4_context, first=False)
+     # play(connect4_context, first=True, mcts=True)
 
      # create_tic_tac_toe_model("initial_test")
      # create_connect_four_model("overfit_nn")
