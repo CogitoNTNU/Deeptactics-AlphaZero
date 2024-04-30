@@ -11,7 +11,7 @@ class AlphaZero:
     def __init__(self, context: GameContext):
         self.context = context
         self.shape = [1] + context.game.observation_tensor_shape()
-        self.c = 4.0 # Exploration constant
+        self.c = 1.41 # Exploration constant
 
     def run_simulation(self, state, num_simulations=800): # Num-simulations 800 is good for tic-tac-toe
         """
@@ -28,6 +28,7 @@ class AlphaZero:
             
             if not node.state.is_terminal():
                 policy, value = evaluate(node.state.observation_tensor(), self.shape, self.context.nn, self.context.device)
+                value = -value
                 expand(node, policy)
             
             else:

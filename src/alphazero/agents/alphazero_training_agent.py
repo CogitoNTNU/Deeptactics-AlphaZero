@@ -83,6 +83,7 @@ class AlphaZero(torch.nn.Module):
 
                 if not node.state.is_terminal():
                     policy, value = evaluate(node.state.observation_tensor(), self.shape, self.context.nn, self.context.device)
+                    value = -value
                     expand(node, policy)
                 
                 else:
