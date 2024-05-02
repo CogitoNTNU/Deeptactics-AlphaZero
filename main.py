@@ -83,16 +83,6 @@ connect4_context = GameContext(
      save_path=connect4_path
 )
 
-def str2bool(v: str) -> bool:
-    if isinstance(v, bool):
-        return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise ArgumentTypeError('Boolean value expected.')
-
 parser: ArgumentParser = ArgumentParser(description='Control the execution of the AlphaZero game playing system.')
 parser.add_argument('--test_overfit', action='store_true', help='Test overfitting on Connect Four.')
 parser.add_argument('--train_ttt', action='store_true', help='Train AlphaZero on Tic Tac Toe.')

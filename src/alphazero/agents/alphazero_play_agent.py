@@ -11,7 +11,7 @@ class AlphaZero:
     def __init__(self, context: GameContext):
         self.context = context
         self.shape = [1] + context.game.observation_tensor_shape()
-        self.c = 1.41 # Exploration constant
+        self.c = 4. # Exploration constant
 
     def run_simulation(self, state, num_simulations=800): # Num-simulations 800 is good for tic-tac-toe
         """
@@ -57,7 +57,6 @@ def alphazero_self_play(context: GameContext, num_simulations=800):
     
     while (not state.is_terminal()):
         action = alphazero.run_simulation(state, num_simulations)
-        print("best action\t", action, "\n")
         state.apply_action(action)
         print(state)
     
