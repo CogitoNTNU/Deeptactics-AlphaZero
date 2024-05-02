@@ -31,13 +31,19 @@
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
-    <li><a href="#usage">Usage</a></li>
+    <li>
+      <a href="#usage">Usage</a>
+      <ul>
+        <li><a href="#running-main-with-command-line-flags">Running main with command line flags</a></li>
+        <li><a href="#examples-of-usage">Examples of usage</a></li>
+      </ul>
+    </li>
    <li><a href="#team">Team</a></li>
     <li><a href="#license">License</a></li>
   </ol>
 </details>
 
-### About
+## About
 
 -----
 
@@ -47,13 +53,13 @@ Our journey begins with Connect Four, serving as a testing ground and proof of c
 
 This endeavor not only highlights Cogito NTNU's commitment to pushing the boundaries of AI and machine learning but also underscores our passion for blending technology with traditional games, revealing new dimensions of play and strategy. Join us as we explore the frontiers of artificial intelligence, one game at a time.
 
-### Getting Started
+## Getting Started
 
 This section provides a comprehensive guide to setting up and running the project. By following the steps outlined below, you'll be prepared to embark on a journey of deep reinforcement learning with board games, starting with Connect Four and progressing to Chess.
 
 -----
 
-#### Prerequisites
+### Prerequisites
 
 Before you begin, ensure that your system meets the following requirements:
 
@@ -61,7 +67,7 @@ Before you begin, ensure that your system meets the following requirements:
 - **Python Libraries**: Essential libraries such as NumPy and PyTorch are necessary. These are listed in the `requirements.txt` file for easy installation.
 - **Hardware**: For optimal performance, an NVIDIA GPU with CUDA installed is recommended. Running deep reinforcement learning models, especially for complex games like chess, is computationally intensive and may not be feasible on CPU alone.
 
-#### Installation
+### Installation
 
 1. **Clone the Project**: Begin by cloning the repository to your local machine or development environment.
 
@@ -75,15 +81,71 @@ Before you begin, ensure that your system meets the following requirements:
    pip install -r requirements.txt
     ```
 
-#### Usage
+## Usage
 
-As the project is currently under development, specific usage instructions are pending. Once the project reaches a runnable state, detailed steps on how to initiate training sessions, as well as how to utilize the AI for playing Connect Four and Chess, will be provided here. Stay tuned for updates on how to leverage this AI to challenge the strategic depths of these classic board games.
+### Running main with Command Line Flags
+
+main.py is configured to handle different gameplay and training scenarios for the AlphaZero implementation via command line flags. Below are the available flags and their descriptions:
+
+`--test_overfit`: Test overfitting on the Connect Four game model.
+
+`--train_tic_tac_toe`: Train the AlphaZero model on Tic Tac Toe.
+
+`--train_connect_four`: Execute extended training sessions for the Connect Four game.
+
+`--self_play_ttt`: Run self-play simulations on the Tic Tac Toe model.
+
+`--self_play_c4`: Run self-play simulations on the Connect Four model.
+
+`--play_ttt`: Play against the AlphaZero model in Tic Tac Toe.
+
+`--play_c4`: Play against the AlphaZero model in Connect Four.
+
+`--first` or `-f` : The first player is the human player.
+
+`--mcts` or `-m` : Alphazero plays against MCTS instead of human player.
+
+### Examples of Usage
+
+Here are examples of how to run main.py with the available flags from a Bash shell:
+
+``` bash
+# Test overfitting on Connect Four
+python main.py --test_overfit
+
+# Train AlphaZero on Tic Tac Toe
+python main.py --train_ttt
+
+# Train AlphaZero on Connect Four
+python main.py --train_c4
+
+# Run self-play on Tic Tac Toe
+python main.py --self_play_ttt
+
+# Run self-play on Connect Four
+python main.py --self_play_c4
+
+# Play as player2 against AlphaZero on Tic Tac Toe
+python main.py --play_ttt
+
+# Play as player2 against AlphaZero on Connect Four
+python main.py --play_c4
+
+# Play as player1 against AlphaZero on Connect Four
+python main.py --play_c4 -f
+
+# Let Alphazero play as player1 against MCTS
+python main.py --play_c4 -m
+
+# Let AlphaZero play as player2 against MCTS
+python main.py --play_c4 -f -m 
+```
 
 -----
 
 By adhering to the above guidelines, you'll be well-prepared to contribute to or experiment with this cutting-edge exploration into deep reinforcement learning for board games. Whether you're a developer, a researcher, or an enthusiast, your journey into AI and strategic gameplay starts here.
 
-### Team
+## Team
 
 -----
 

@@ -9,12 +9,6 @@ from src.alphazero.alphazero_train_model import train_alphazero_model
 from src.play.play_vs_alphazero import main as play_vs_alphazero
 from src.utils.game_context import GameContext
 
-
-### Idea, make each game generation a longer task.
-# Instead of running one function per game generation, run a function that generates multiple games.
-# This will make the overhead of creating a new multiprocessing process less significant.
-
-
 def test_overfit(context: GameContext):
      
      mp.set_start_method('spawn')
@@ -68,21 +62,21 @@ def play(context: GameContext, first: bool, mcts: bool = False):
           mcts=mcts
      )
 
-overfit_path = "./models/connect_four/overfit_nn"
+overfit_path = "./models/overfit/connect4_nn"
 overfit_context = GameContext(
      game_name="connect_four", 
      nn=NeuralNetworkConnectFour().load(overfit_path), 
-     save_path="./models/overfit_waste"
+     save_path="./models/overfit/connect4_overfit_waste"
 )
 
-tic_tac_toe_path = "./models/test_nn"
+tic_tac_toe_path = "./models/tic_tac_toe/good_nn"
 tic_tac_toe_context = GameContext(
      game_name="tic_tac_toe", 
      nn=NeuralNetwork().load(tic_tac_toe_path), 
      save_path=tic_tac_toe_path
 )
 
-connect4_path = "./models/connect_four/initial_test"
+connect4_path = "./models/connect_four/good_nn"
 connect4_context = GameContext(
      game_name="connect_four", 
      nn=NeuralNetworkConnectFour().load(connect4_path), 
@@ -101,8 +95,8 @@ def str2bool(v: str) -> bool:
 
 parser: ArgumentParser = ArgumentParser(description='Control the execution of the AlphaZero game playing system.')
 parser.add_argument('--test_overfit', action='store_true', help='Test overfitting on Connect Four.')
-parser.add_argument('--train_tic_tac_toe', action='store_true', help='Train AlphaZero on Tic Tac Toe.')
-parser.add_argument('--train_connect_four', action='store_true', help='Train AlphaZero on Connect Four for a long time.')
+parser.add_argument('--train_ttt', action='store_true', help='Train AlphaZero on Tic Tac Toe.')
+parser.add_argument('--train_c4', action='store_true', help='Train AlphaZero on Connect Four for a long time.')
 
 parser.add_argument('--self_play_ttt', action='store_true', help='Run self-play on Tic Tac Toe.')
 parser.add_argument('--self_play_c4', action='store_true', help='Run self-play on Connect Four.')
@@ -122,10 +116,10 @@ if __name__ == '__main__': # Needed for multiprocessing to work
      if args.test_overfit:
           test_overfit(overfit_context)
      
-     if args.train_tic_tac_toe:
+     if args.train_ttt:
           train_tic_tac_toe(tic_tac_toe_context)
 
-     if args.train_connect_four:
+     if args.train_c4:
           train_connect_four(connect4_context)
 
      if args.self_play_ttt:
@@ -135,7 +129,7 @@ if __name__ == '__main__': # Needed for multiprocessing to work
           self_play(connect4_context)
 
      if args.play_ttt:
-          play(tic_tac_toe_context, first=args.first)
+          play(tic_tac_toe_context, first=args.first, mcts=args.mcts)
      
      if args.play_c4:
           play(connect4_context, first=args.first, mcts=args.mcts)
