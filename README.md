@@ -87,12 +87,13 @@ By adhering to the above guidelines, you'll be well-prepared to contribute to or
 
 -----
 
-<!--INSERT PICTURE OF TEAM-->
 <div align="center">
-<img src="./docs/pictures/sample_pic.jpg" style="width: 30vw;"></img>
+<img src="./docs/pictures/alphazero-group-image.jpg" style="width: 30vw;"></img>
 </div>
 
-Left to right: [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)  
+Back row left to right: [Nils Henrik Lund](https://github.com/Nilsthehacker), [Haagen Mæland Moe](https://github.com/Thesmund)
+
+Front row left to right: [Kristian Carlenius](https://github.com/kristiancarlenius), [Ludvig Øvrevik](https://github.com/ludvigovrevik), [Christian Fredrik Johnsen](https://github.com/ChristianFredrikJohnsen), [Brage Kvamme](https://github.com/BrageHK)
 
 #### Leaders
 
