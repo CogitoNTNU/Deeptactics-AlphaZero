@@ -1,4 +1,4 @@
-from argparse import ArgumentParser, ArgumentTypeError
+from argparse import ArgumentParser
 from torch import multiprocessing as mp
 from src.neuralnet.neural_network import NeuralNetwork
 from src.neuralnet.neural_network_connect_four import NeuralNetworkConnectFour
