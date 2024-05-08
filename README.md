@@ -17,7 +17,6 @@
 
 </p>
 
-
 <details>
   <summary>Table of Contents</summary>
   <ol>
@@ -29,6 +28,7 @@
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
+        <li><a href="#running-tests">Running Tests</a></li>
       </ul>
     </li>
     <li>
@@ -38,7 +38,7 @@
         <li><a href="#examples-of-usage">Examples of usage</a></li>
       </ul>
     </li>
-   <li><a href="#team">Team</a></li>
+    <li><a href="#team">Team</a></li>
     <li><a href="#license">License</a></li>
   </ol>
 </details>
@@ -80,6 +80,20 @@ Before you begin, ensure that your system meets the following requirements:
    ```bash
    pip install -r requirements.txt
     ```
+
+### Running Tests
+
+To ensure that the project is set up correctly and functioning as expected, run the tests using the following command:
+
+```bash
+pytest
+```
+
+If you want to add print statements to the tests to debug, write your code of choice and run the following command:
+
+```bash
+pytest -s
+```
 
 ## Usage
 
