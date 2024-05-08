@@ -62,21 +62,21 @@ def play(context: GameContext, first: bool, mcts: bool = False):
           mcts=mcts
      )
 
-overfit_path = "./models/overfit/connect4_nn"
+overfit_path = "./models/overfit/connect4_nn.nn"
 overfit_context = GameContext(
      game_name="connect_four", 
      nn=NeuralNetworkConnectFour().load(overfit_path), 
-     save_path="./models/overfit/connect4_overfit_waste"
+     save_path="./models/overfit/connect4_overfit_waste.nn"
 )
 
-tic_tac_toe_path = "./models/tic_tac_toe/good_nn"
+tic_tac_toe_path = "./models/tic_tac_toe/good_nn.nn"
 tic_tac_toe_context = GameContext(
      game_name="tic_tac_toe", 
      nn=NeuralNetwork().load(tic_tac_toe_path), 
      save_path=tic_tac_toe_path
 )
 
-connect4_path = "./models/connect_four/good_nn"
+connect4_path = "./models/connect_four/good_nn.nn"
 connect4_context = GameContext(
      game_name="connect_four", 
      nn=NeuralNetworkConnectFour().load(connect4_path), 
