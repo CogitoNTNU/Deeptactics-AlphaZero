@@ -18,7 +18,7 @@ def get_play_alphazero_games_arguments(
     """
     
     max_num_threads = mp.cpu_count() - 1
-    number_of_threads = max(1, min(max_num_threads, num_games // 20)) # We estimate that we should have at least 4 games per process to get the best time efficiency.
+    number_of_threads = max(1, min(max_num_threads, num_games // 10)) # We estimate that we should have at least 4 games per process to get the best time efficiency.
     
     num_games_per_thread = num_games // number_of_threads
     remainder = num_games % number_of_threads
