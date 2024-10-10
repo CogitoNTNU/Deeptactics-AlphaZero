@@ -78,23 +78,23 @@ def generate_training_data(alphazero: AlphaZero, num_games: int, num_simulations
     
     training_data = []
 
-    start_time = time.time()
-    result_list = [play_alphazero_games(alphazero, num_games, num_simulations)] # Single-threaded
-    end_time = time.time()
-    print(f"Generated training data in {end_time - start_time:.2f} seconds.")
+    # start_time = time.time()
+    # result_list = [play_alphazero_games(alphazero, num_games, num_simulations)] # Single-threaded
+    # end_time = time.time()
+    # print(f"Generated training data in {end_time - start_time:.2f} seconds.")
 
-    # multicore_args, thread_count = get_play_alphazero_games_arguments(alphazero, num_games, num_simulations)
-    # try:
-    #     print(f"Generating training data with {thread_count} threads...")
-    #     start_time = time.time()
-    #     with mp.Pool(thread_count) as pool:
-    #         result_list = list(tqdm(pool.starmap(play_alphazero_games, multicore_args)))
-    #     end_time = time.time()
-    #     print(f"Generated training data with {thread_count} threads in {end_time - start_time:.2f} seconds.")
+    multicore_args, thread_count = get_play_alphazero_games_arguments(alphazero, num_games, num_simulations)
+    try:
+        print(f"Generating training data with {thread_count} threads...")
+        start_time = time.time()
+        with mp.Pool(thread_count) as pool:
+            result_list = list(tqdm(pool.starmap(play_alphazero_games, multicore_args)))
+        end_time = time.time()
+        print(f"Generated training data with {thread_count} threads in {end_time - start_time:.2f} seconds.")
 
-    # except KeyboardInterrupt:
-    #     print("KeyboardInterrupt: Terminating training data generation...")
-    #     raise
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt: Terminating training data generation...")
+        raise
     
     for i in range(len(result_list)):
         training_data.extend(result_list[i])
